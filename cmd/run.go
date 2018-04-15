@@ -29,13 +29,10 @@ import (
 
 // digestCmd represents the digest command
 var digestCmd = &cobra.Command{
-	Use:   "digest <csv-file>",
-	Short: "Takes in a csv and creates a digest of each line",
-	Long: `Takes a Csv file and creates a digest for each line.
-The tool can output to stdout or a file in plaintext.
-It can also serialize the output as a binary file for any other go program to consume directly`,
+	Use:   "run",
+	Short: "run diff between base-csv and delta-csv",
 	Run: func(cmd *cobra.Command, args []string) {
-		runDigest()
+		run()
 	},
 }
 
@@ -56,8 +53,8 @@ func init() {
 	// is called directly, e.g.:
 	// digestCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	digestCmd.Flags().StringVarP(&config.Base, "base", "b", "", "Input csv to be used as base")
-	digestCmd.Flags().StringVarP(&config.Input, "input", "i", "", "The new csv file on which diff should be done")
+	digestCmd.Flags().StringVarP(&config.Base, "base", "b", "", "The base csv file")
+	digestCmd.Flags().StringVarP(&config.Delta, "delta", "d", "", "The delta csv file")
 	digestCmd.Flags().StringVarP(&config.Encoder, "encoder", "e", "json", "Encoder to use to output the digest. Available Encoders: "+strings.Join(GetEncoders(), ","))
 	digestCmd.Flags().IntSliceVarP(&config.KeyPositions, "key-positions", "k", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	digestCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
@@ -65,10 +62,10 @@ func init() {
 	digestCmd.Flags().StringVarP(&config.Modifications, "modifications", "m", "STDOUT", "Output stream for the modifications in delta file")
 
 	digestCmd.MarkFlagRequired("base")
-	digestCmd.MarkFlagRequired("input")
+	digestCmd.MarkFlagRequired("delta")
 }
 
-func runDigest() {
+func run() {
 	if str, err := json.Marshal(config); err == nil && debug {
 		fmt.Println(string(str))
 	} else if err != nil {
@@ -78,14 +75,14 @@ func runDigest() {
 	baseConfig := digest.DigestConfig{
 		KeyPositions: config.GetKeyPositions(),
 		Encoder:      config.GetEncoder(),
-		Reader:       config.GetBase(),
+		Reader:       config.GetBaseReader(),
 		Writer:       os.Stdout,
 	}
 
-	inputConfig := digest.DigestConfig{
+	deltaConfig := digest.DigestConfig{
 		KeyPositions: config.GetKeyPositions(),
 		Encoder:      config.GetEncoder(),
-		Reader:       config.GetInput(),
+		Reader:       config.GetDeltaReader(),
 		Writer:       os.Stdout,
 		SourceMap:    true,
 	}
@@ -98,7 +95,7 @@ func runDigest() {
 	go generateInBackground("base", baseConfig, &wg, baseChannel)
 
 	wg.Add(1)
-	go generateInBackground("delta", inputConfig, &wg, deltaChannel)
+	go generateInBackground("delta", deltaConfig, &wg, deltaChannel)
 
 	wg.Add(1)
 	go compareInBackgroud(baseChannel, deltaChannel, &wg)

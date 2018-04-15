@@ -33,11 +33,9 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "csv-digest",
-	Short: "Takes in a csv and creates a digest of each line",
-	Long: `Takes a Csv file and creates a digest for each line.
-The tool can output to stdout or a file in plaintext.
-It can also serialize the output as a binary file for any other go program to consume directly`,
+	Use:   "csv-diff",
+	Short: "A CSV diff tool",
+	Long:  "Differentiates two csv files and finds out the additions and modifications",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) {

@@ -21,7 +21,7 @@ type Config struct {
 	KeyPositions  []int
 	Encoder       string
 	Base          string
-	Input         string
+	Delta         string
 	Additions     string
 	Modifications string
 }
@@ -42,12 +42,12 @@ func (c Config) GetEncoder() encoder.Encoder {
 	}
 }
 
-func (c Config) GetBase() io.Reader {
+func (c Config) GetBaseReader() io.Reader {
 	return getReader(c.Base)
 }
 
-func (c Config) GetInput() io.Reader {
-	return getReader(c.Input)
+func (c Config) GetDeltaReader() io.Reader {
+	return getReader(c.Delta)
 }
 
 func (c Config) AdditionsWriter() io.WriteCloser {

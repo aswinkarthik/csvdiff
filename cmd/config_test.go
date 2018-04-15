@@ -22,19 +22,3 @@ func TestGetKeyPositions(t *testing.T) {
 	config = Config{KeyPositions: []int{}}
 	assert.Equal(t, []int{0}, config.GetKeyPositions())
 }
-
-// func TestReader(t *testing.T) {
-// config := Config{Base: "STDIN"}
-// assert.Equal(t, os.Stdin, config.GetReader())
-//
-// config = Config{Base: "-"}
-// assert.Equal(t, os.Stdin, config.GetReader())
-// }
-
-// func TestWriter(t *testing.T) {
-// config := Config{Base: "STDOUT"}
-// assert.Equal(t, os.Stdout, config.GetWriter())
-//
-// config = Config{Base: "-"}
-// assert.Equal(t, os.Stdout, config.GetWriter())
-// }
