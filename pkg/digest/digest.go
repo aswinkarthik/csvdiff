@@ -1,8 +1,6 @@
 package digest
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/csv"
 	"io"
 	"strings"
@@ -21,22 +19,14 @@ type Digest struct {
 // CreateDigest creates a Digest for each line of csv.
 // There will be one Digest per line
 func CreateDigest(csv []string, keyPositions []int) Digest {
-	var keyBuffer bytes.Buffer
-	return CreateDigestWithBuffer(csv, keyPositions, &keyBuffer)
-}
-
-// CreateDigestWithBuffer creates a Digest for each line of csv.
-// Also takes a buffer which can be passed to optimize on allocating a buffer for
-// computing digest of the key
-func CreateDigestWithBuffer(csv []string, keyPositions []int, b *bytes.Buffer) Digest {
-	for _, pos := range keyPositions {
-		b.WriteString(csv[pos])
+	keyCsv := make([]string, len(keyPositions))
+	for i, pos := range keyPositions {
+		keyCsv[i] = csv[pos]
 	}
 
-	key := xxhash.Sum64(b.Bytes())
+	key := xxhash.Sum64String(strings.Join(keyCsv, ","))
 	digest := xxhash.Sum64String(strings.Join(csv, ","))
 
-	b.Reset()
 	return Digest{Key: key, Value: digest}
 
 }
@@ -49,31 +39,21 @@ type DigestConfig struct {
 }
 
 func DigestForFile(config DigestConfig) error {
-	bufferedReader := bufio.NewReader(config.Reader)
-	reader := csv.NewReader(bufferedReader)
-	lines, err := reader.ReadAll()
-	output := make([]Digest, len(lines))
-	for i, line := range lines {
+	reader := csv.NewReader(config.Reader)
 
+	output := make(map[uint64]uint64)
+	for {
+		line, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
-				return nil
+				break
 			}
 			return err
 		}
-		output[i] = CreateDigest(line, config.KeyPositions)
+		digest := CreateDigest(line, config.KeyPositions)
+		output[digest.Key] = digest.Value
 	}
 
-	config.Encoder.Encode(toHash(output), config.Writer)
+	config.Encoder.Encode(output, config.Writer)
 	return nil
-}
-
-func toHash(digests []Digest) map[uint64]uint64 {
-	result := make(map[uint64]uint64, len(digests))
-
-	for _, digest := range digests {
-		result[digest.Key] = digest.Value
-	}
-
-	return result
 }

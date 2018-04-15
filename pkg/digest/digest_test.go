@@ -49,18 +49,3 @@ func TestDigestForFile(t *testing.T) {
 	assert.Nil(t, err, "error at DigestForFile")
 	assert.Equal(t, expectedDigest, actualDigest)
 }
-
-func TestToHash(t *testing.T) {
-	digests := []Digest{
-		Digest{Key: 13237225503670494420, Value: 17613682921943161199},
-		Digest{Key: 6927017134761466251, Value: 5830873111732207531},
-	}
-
-	actualHash := toHash(digests)
-	expectedHash := map[uint64]uint64{
-		13237225503670494420: 17613682921943161199,
-		6927017134761466251:  5830873111732207531,
-	}
-
-	assert.Equal(t, expectedHash, actualHash)
-}
