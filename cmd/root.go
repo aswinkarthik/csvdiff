@@ -34,8 +34,9 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "csvdiff",
-	Short: "A CSV diff tool",
-	Long:  "Differentiates two csv files and finds out the additions and modifications",
+	Short: "A diff tool for database tables dumped as csv files",
+	Long: `Differentiates two csv files and finds out the additions and modifications.
+Most suitable for csv files created from database tables`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) {
