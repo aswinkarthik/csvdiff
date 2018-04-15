@@ -50,7 +50,7 @@ func runDigest() {
 		Writer:       config.GetWriter(),
 	}
 
-	err := digest.DigestForFile(digestConfig)
+	_, err := digest.Create(digestConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -38,7 +38,7 @@ type DigestConfig struct {
 	Writer       io.Writer
 }
 
-func DigestForFile(config DigestConfig) error {
+func Create(config DigestConfig) (map[uint64]uint64, error) {
 	reader := csv.NewReader(config.Reader)
 
 	output := make(map[uint64]uint64)
@@ -48,12 +48,12 @@ func DigestForFile(config DigestConfig) error {
 			if err == io.EOF {
 				break
 			}
-			return err
+			return nil, err
 		}
 		digest := CreateDigest(line, config.KeyPositions)
 		output[digest.Key] = digest.Value
 	}
 
-	config.Encoder.Encode(output, config.Writer)
-	return nil
+	// config.Encoder.Encode(output, config.Writer)
+	return output, nil
 }

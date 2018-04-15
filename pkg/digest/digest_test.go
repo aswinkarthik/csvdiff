@@ -2,7 +2,6 @@ package digest
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -41,10 +40,12 @@ func TestDigestForFile(t *testing.T) {
 		KeyPositions: []int{0},
 	}
 
-	err := DigestForFile(testConfig)
+	actualDigest, err := Create(testConfig)
 
-	actualDigest := outputBuffer.String()
-	expectedDigest := fmt.Sprintf(`{"%d":%d,"%d":%d}`, firstKey, firstDigest, secondKey, secondDigest)
+	//actualDigest := outputBuffer.String()
+	//expectedDigest := fmt.Sprintf(`{"%d":%d,"%d":%d}`, firstKey, firstDigest, secondKey, secondDigest)
+
+	expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
 
 	assert.Nil(t, err, "error at DigestForFile")
 	assert.Equal(t, expectedDigest, actualDigest)
