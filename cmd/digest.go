@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/aswinkarthik93/csv-digest/pkg/digest"
@@ -43,17 +44,39 @@ func runDigest() {
 		log.Fatal(err)
 	}
 
-	digestConfig := digest.DigestConfig{
+	baseConfig := digest.DigestConfig{
 		KeyPositions: config.GetKeyPositions(),
 		Encoder:      config.GetEncoder(),
-		Reader:       config.GetReader(),
-		Writer:       config.GetWriter(),
+		Reader:       config.GetBase(),
+		Writer:       os.Stdout,
 	}
 
-	_, err := digest.Create(digestConfig)
+	inputConfig := digest.DigestConfig{
+		KeyPositions: config.GetKeyPositions(),
+		Encoder:      config.GetEncoder(),
+		Reader:       config.GetInput(),
+		Writer:       os.Stdout,
+	}
+
+	base, err := digest.Create(baseConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Generated Base Digest")
+
+	change, err := digest.Create(inputConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Generated Input file Digest")
+
+	additions, modifications := digest.Compare(base, change)
+
+	fmt.Println(fmt.Sprintf("Additions Count: %d", len(additions)))
+	fmt.Println(additions)
+	fmt.Println("")
+	fmt.Println(fmt.Sprintf("Modifications Count: %d", len(modifications)))
+	fmt.Println(modifications)
 }
 
 var debug bool
@@ -70,9 +93,12 @@ func init() {
 	// is called directly, e.g.:
 	// digestCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	digestCmd.Flags().StringVarP(&config.Input, "input", "i", "STDIN", "Input csv file to read from")
-	digestCmd.Flags().StringVarP(&config.Output, "output", "o", "STDOUT", "Digest filename to save to")
+	digestCmd.Flags().StringVarP(&config.Base, "base", "b", "", "Input csv to be used as base")
+	digestCmd.Flags().StringVarP(&config.Input, "input", "i", "", "The new csv file on which diff should be done")
 	digestCmd.Flags().StringVarP(&config.Encoder, "encoder", "e", "json", "Encoder to use to output the digest. Available Encoders: "+strings.Join(GetEncoders(), ","))
 	digestCmd.Flags().IntSliceVarP(&config.KeyPositions, "key-positions", "k", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	digestCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
+
+	digestCmd.MarkFlagRequired("base")
+	digestCmd.MarkFlagRequired("input")
 }

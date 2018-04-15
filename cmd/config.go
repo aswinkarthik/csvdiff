@@ -20,8 +20,8 @@ func init() {
 type Config struct {
 	KeyPositions []int
 	Encoder      string
+	Base         string
 	Input        string
-	Output       string
 }
 
 func (c Config) GetKeyPositions() []int {
@@ -40,22 +40,27 @@ func (c Config) GetEncoder() encoder.Encoder {
 	}
 }
 
-func (c Config) GetReader() io.Reader {
-	if c.Input != "STDIN" && c.Input != "-" && c.Input != "" {
-		file, err := os.Open(c.Input)
+func (c Config) GetBase() io.Reader {
+	return getReader(c.Base)
+}
 
-		if err != nil {
-			log.Fatal(err)
-		}
+func (c Config) GetInput() io.Reader {
+	return getReader(c.Input)
+}
 
-		return file
+func getReader(filename string) io.Reader {
+	file, err := os.Open(filename)
+
+	if err != nil {
+		log.Fatal(err)
 	}
-	return os.Stdin
+
+	return file
 }
 
 func (c Config) GetWriter() io.Writer {
-	if c.Output != "STDOUT" && c.Output != "-" && c.Output != "" {
-		file, err := os.Create(c.Output)
+	if c.Input != "STDOUT" && c.Input != "-" && c.Input != "" {
+		file, err := os.Create(c.Input)
 
 		if err != nil {
 			log.Fatal(err)
