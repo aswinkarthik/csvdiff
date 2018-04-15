@@ -14,6 +14,7 @@ import (
 type Digest struct {
 	Key   uint64
 	Value uint64
+	Row   string
 }
 
 // CreateDigest creates a Digest for each line of csv.
@@ -24,10 +25,11 @@ func CreateDigest(csv []string, keyPositions []int) Digest {
 		keyCsv[i] = csv[pos]
 	}
 
+	row := strings.Join(csv, ",")
 	key := xxhash.Sum64String(strings.Join(keyCsv, ","))
-	digest := xxhash.Sum64String(strings.Join(csv, ","))
+	digest := xxhash.Sum64String(row)
 
-	return Digest{Key: key, Value: digest}
+	return Digest{Key: key, Value: digest, Row: row}
 
 }
 
@@ -36,24 +38,29 @@ type DigestConfig struct {
 	Encoder      encoder.Encoder
 	Reader       io.Reader
 	Writer       io.Writer
+	SourceMap    bool
 }
 
-func Create(config DigestConfig) (map[uint64]uint64, error) {
+func Create(config DigestConfig) (map[uint64]uint64, map[uint64]string, error) {
 	reader := csv.NewReader(config.Reader)
 
 	output := make(map[uint64]uint64)
+	sourceMap := make(map[uint64]string)
 	for {
 		line, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
-			return nil, err
+			return nil, nil, err
 		}
 		digest := CreateDigest(line, config.KeyPositions)
 		output[digest.Key] = digest.Value
+		if config.SourceMap {
+			sourceMap[digest.Key] = digest.Row
+		}
 	}
 
 	// config.Encoder.Encode(output, config.Writer)
-	return output, nil
+	return output, sourceMap, nil
 }

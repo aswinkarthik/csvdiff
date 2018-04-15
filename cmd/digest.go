@@ -56,15 +56,16 @@ func runDigest() {
 		Encoder:      config.GetEncoder(),
 		Reader:       config.GetInput(),
 		Writer:       os.Stdout,
+		SourceMap:    true,
 	}
 
-	base, err := digest.Create(baseConfig)
+	base, _, err := digest.Create(baseConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Generated Base Digest")
 
-	change, err := digest.Create(inputConfig)
+	change, sourceMap, err := digest.Create(inputConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,10 +74,15 @@ func runDigest() {
 	additions, modifications := digest.Compare(base, change)
 
 	fmt.Println(fmt.Sprintf("Additions Count: %d", len(additions)))
-	fmt.Println(additions)
+	for _, addition := range additions {
+		fmt.Println(sourceMap[addition])
+	}
+
 	fmt.Println("")
 	fmt.Println(fmt.Sprintf("Modifications Count: %d", len(modifications)))
-	fmt.Println(modifications)
+	for _, modification := range modifications {
+		fmt.Println(sourceMap[modification])
+	}
 }
 
 var debug bool
