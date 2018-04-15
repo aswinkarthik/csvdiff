@@ -18,10 +18,12 @@ func init() {
 }
 
 type Config struct {
-	KeyPositions []int
-	Encoder      string
-	Base         string
-	Input        string
+	KeyPositions  []int
+	Encoder       string
+	Base          string
+	Input         string
+	Additions     string
+	Modifications string
 }
 
 func (c Config) GetKeyPositions() []int {
@@ -48,6 +50,14 @@ func (c Config) GetInput() io.Reader {
 	return getReader(c.Input)
 }
 
+func (c Config) AdditionsWriter() io.WriteCloser {
+	return getWriter(c.Additions)
+}
+
+func (c Config) ModificationsWriter() io.WriteCloser {
+	return getWriter(c.Modifications)
+}
+
 func getReader(filename string) io.Reader {
 	file, err := os.Open(filename)
 
@@ -58,9 +68,9 @@ func getReader(filename string) io.Reader {
 	return file
 }
 
-func (c Config) GetWriter() io.Writer {
-	if c.Input != "STDOUT" && c.Input != "-" && c.Input != "" {
-		file, err := os.Create(c.Input)
+func getWriter(outputStream string) io.WriteCloser {
+	if outputStream != "STDOUT" {
+		file, err := os.Create(outputStream)
 
 		if err != nil {
 			log.Fatal(err)

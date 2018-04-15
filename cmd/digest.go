@@ -73,15 +73,23 @@ func runDigest() {
 
 	additions, modifications := digest.Compare(base, change)
 
-	fmt.Println(fmt.Sprintf("Additions Count: %d", len(additions)))
+	log.Println(fmt.Sprintf("Additions Count: %d", len(additions)))
+	aWriter := config.AdditionsWriter()
+	defer aWriter.Close()
+	newLine := []byte{'\n'}
 	for _, addition := range additions {
-		fmt.Println(sourceMap[addition])
+		aWriter.Write([]byte(sourceMap[addition]))
+		aWriter.Write(newLine)
 	}
 
 	fmt.Println("")
-	fmt.Println(fmt.Sprintf("Modifications Count: %d", len(modifications)))
+
+	log.Println(fmt.Sprintf("Modifications Count: %d", len(modifications)))
+	mWriter := config.ModificationsWriter()
+	defer mWriter.Close()
 	for _, modification := range modifications {
-		fmt.Println(sourceMap[modification])
+		mWriter.Write([]byte(sourceMap[modification]))
+		mWriter.Write(newLine)
 	}
 }
 
@@ -104,6 +112,8 @@ func init() {
 	digestCmd.Flags().StringVarP(&config.Encoder, "encoder", "e", "json", "Encoder to use to output the digest. Available Encoders: "+strings.Join(GetEncoders(), ","))
 	digestCmd.Flags().IntSliceVarP(&config.KeyPositions, "key-positions", "k", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	digestCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
+	digestCmd.Flags().StringVarP(&config.Additions, "additions", "a", "STDOUT", "Output stream for the additions in delta file")
+	digestCmd.Flags().StringVarP(&config.Modifications, "modifications", "m", "STDOUT", "Output stream for the modifications in delta file")
 
 	digestCmd.MarkFlagRequired("base")
 	digestCmd.MarkFlagRequired("input")

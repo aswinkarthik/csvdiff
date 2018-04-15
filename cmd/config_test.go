@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"testing"
 
 	"github.com/aswinkarthik93/csv-digest/pkg/encoder"
@@ -32,10 +31,10 @@ func TestGetKeyPositions(t *testing.T) {
 // assert.Equal(t, os.Stdin, config.GetReader())
 // }
 
-func TestWriter(t *testing.T) {
-	config := Config{Base: "STDOUT"}
-	assert.Equal(t, os.Stdout, config.GetWriter())
-
-	config = Config{Base: "-"}
-	assert.Equal(t, os.Stdout, config.GetWriter())
-}
+// func TestWriter(t *testing.T) {
+// config := Config{Base: "STDOUT"}
+// assert.Equal(t, os.Stdout, config.GetWriter())
+//
+// config = Config{Base: "-"}
+// assert.Equal(t, os.Stdout, config.GetWriter())
+// }
