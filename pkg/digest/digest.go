@@ -1,6 +1,7 @@
 package digest
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/csv"
 	"io"
@@ -10,16 +11,16 @@ import (
 	"github.com/cespare/xxhash"
 )
 
-// CsvDigest represents the binding of the key of each csv line
+// Digest represents the binding of the key of each csv line
 // and the digest that gets created for the entire line
-type CsvDigest struct {
-	Key    uint64
-	Digest uint64
+type Digest struct {
+	Key   uint64
+	Value uint64
 }
 
 // CreateDigest creates a Digest for each line of csv.
-// There will be one CsvDigest per line
-func CreateDigest(csv []string, keyPositions []int) CsvDigest {
+// There will be one Digest per line
+func CreateDigest(csv []string, keyPositions []int) Digest {
 	var keyBuffer bytes.Buffer
 	return CreateDigestWithBuffer(csv, keyPositions, &keyBuffer)
 }
@@ -27,7 +28,7 @@ func CreateDigest(csv []string, keyPositions []int) CsvDigest {
 // CreateDigestWithBuffer creates a Digest for each line of csv.
 // Also takes a buffer which can be passed to optimize on allocating a buffer for
 // computing digest of the key
-func CreateDigestWithBuffer(csv []string, keyPositions []int, b *bytes.Buffer) CsvDigest {
+func CreateDigestWithBuffer(csv []string, keyPositions []int, b *bytes.Buffer) Digest {
 	for _, pos := range keyPositions {
 		b.WriteString(csv[pos])
 	}
@@ -36,7 +37,7 @@ func CreateDigestWithBuffer(csv []string, keyPositions []int, b *bytes.Buffer) C
 	digest := xxhash.Sum64String(strings.Join(csv, ","))
 
 	b.Reset()
-	return CsvDigest{Key: key, Digest: digest}
+	return Digest{Key: key, Value: digest}
 
 }
 
@@ -48,9 +49,11 @@ type DigestConfig struct {
 }
 
 func DigestForFile(config DigestConfig) error {
-	reader := csv.NewReader(config.Reader)
-	for {
-		line, err := reader.Read()
+	bufferedReader := bufio.NewReader(config.Reader)
+	reader := csv.NewReader(bufferedReader)
+	lines, err := reader.ReadAll()
+	output := make([]Digest, len(lines))
+	for i, line := range lines {
 
 		if err != nil {
 			if err == io.EOF {
@@ -58,9 +61,19 @@ func DigestForFile(config DigestConfig) error {
 			}
 			return err
 		}
-
-		config.Encoder.Encode(CreateDigest(line, config.KeyPositions), config.Writer)
+		output[i] = CreateDigest(line, config.KeyPositions)
 	}
 
+	config.Encoder.Encode(toHash(output), config.Writer)
 	return nil
+}
+
+func toHash(digests []Digest) map[uint64]uint64 {
+	result := make(map[uint64]uint64, len(digests))
+
+	for _, digest := range digests {
+		result[digest.Key] = digest.Value
+	}
+
+	return result
 }
