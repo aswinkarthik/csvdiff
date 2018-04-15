@@ -22,7 +22,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/aswinkarthik93/csv-digest/pkg/digest"
+	"github.com/aswinkarthik93/csvdiff/pkg/digest"
 	"github.com/spf13/cobra"
 )
 

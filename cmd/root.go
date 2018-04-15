@@ -33,7 +33,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "csv-diff",
+	Use:   "csvdiff",
 	Short: "A CSV diff tool",
 	Long:  "Differentiates two csv files and finds out the additions and modifications",
 	// Uncomment the following line if your bare application
@@ -57,7 +57,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.csv-digest.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.csvdiff.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -77,9 +77,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".csv-digest" (without extension).
+		// Search config in home directory with name ".csvdiff" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".csv-digest")
+		viper.SetConfigName(".csvdiff")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

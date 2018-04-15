@@ -20,7 +20,7 @@
 
 package main
 
-import "github.com/aswinkarthik93/csv-digest/cmd"
+import "github.com/aswinkarthik93/csvdiff/cmd"
 
 func main() {
 	cmd.Execute()
