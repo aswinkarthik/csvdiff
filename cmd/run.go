@@ -20,7 +20,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/aswinkarthik93/csv-digest/pkg/digest"
@@ -55,7 +54,6 @@ func init() {
 
 	digestCmd.Flags().StringVarP(&config.Base, "base", "b", "", "The base csv file")
 	digestCmd.Flags().StringVarP(&config.Delta, "delta", "d", "", "The delta csv file")
-	digestCmd.Flags().StringVarP(&config.Encoder, "encoder", "e", "json", "Encoder to use to output the digest. Available Encoders: "+strings.Join(GetEncoders(), ","))
 	digestCmd.Flags().IntSliceVarP(&config.KeyPositions, "key-positions", "k", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	digestCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
 	digestCmd.Flags().StringVarP(&config.Additions, "additions", "a", "STDOUT", "Output stream for the additions in delta file")
@@ -74,14 +72,12 @@ func run() {
 
 	baseConfig := digest.DigestConfig{
 		KeyPositions: config.GetKeyPositions(),
-		Encoder:      config.GetEncoder(),
 		Reader:       config.GetBaseReader(),
 		Writer:       os.Stdout,
 	}
 
 	deltaConfig := digest.DigestConfig{
 		KeyPositions: config.GetKeyPositions(),
-		Encoder:      config.GetEncoder(),
 		Reader:       config.GetDeltaReader(),
 		Writer:       os.Stdout,
 		SourceMap:    true,

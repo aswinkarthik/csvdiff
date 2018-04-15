@@ -5,7 +5,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/aswinkarthik93/csv-digest/pkg/encoder"
 	"github.com/cespare/xxhash"
 )
 
@@ -35,7 +34,6 @@ func CreateDigest(csv []string, keyPositions []int) Digest {
 
 type DigestConfig struct {
 	KeyPositions []int
-	Encoder      encoder.Encoder
 	Reader       io.Reader
 	Writer       io.Writer
 	SourceMap    bool
@@ -61,6 +59,5 @@ func Create(config DigestConfig) (map[uint64]uint64, map[uint64]string, error) {
 		}
 	}
 
-	// config.Encoder.Encode(output, config.Writer)
 	return output, sourceMap, nil
 }

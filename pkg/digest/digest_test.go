@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aswinkarthik93/csv-digest/pkg/encoder"
 	"github.com/cespare/xxhash"
 	"github.com/stretchr/testify/assert"
 )
@@ -36,15 +35,11 @@ func TestDigestForFile(t *testing.T) {
 	testConfig := DigestConfig{
 		Reader:       strings.NewReader(firstLine + "\n" + secondLine),
 		Writer:       &outputBuffer,
-		Encoder:      encoder.JsonEncoder{},
 		KeyPositions: []int{0},
 		SourceMap:    true,
 	}
 
 	actualDigest, sourceMap, err := Create(testConfig)
-
-	//actualDigest := outputBuffer.String()
-	//expectedDigest := fmt.Sprintf(`{"%d":%d,"%d":%d}`, firstKey, firstDigest, secondKey, secondDigest)
 
 	expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
 	expectedSourceMap := map[uint64]string{firstKey: firstLine, secondKey: secondLine}
@@ -57,7 +52,6 @@ func TestDigestForFile(t *testing.T) {
 	testConfigWithoutSourceMap := DigestConfig{
 		Reader:       strings.NewReader(firstLine + "\n" + secondLine),
 		Writer:       &outputBuffer,
-		Encoder:      encoder.JsonEncoder{},
 		KeyPositions: []int{0},
 		SourceMap:    false,
 	}
