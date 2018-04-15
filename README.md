@@ -15,10 +15,16 @@ $ csvdiff run --base base.csv --delta delta.csv
 ...
 ```
 
+## Installation
+
+```
+go get -u github.com/aswinkarthik93/csvdiff
+```
+
 ## Usecase
 
 - Cases where you have a base database dump as csv. If you receive the changes as another database dump as csv, this tool can be used to figure out what are the additions and modifications to the original database dump. The `additions.csv` can be used to create an `insert.sql` and with the `modifications.csv` an `update.sql` data migration.
-- As the delta file, it supports passing of just the changes as well as the entire csv file.
+- The delta file can either contain just the changes or the entire table dump along with the changes.
 
 ## Supported
 
@@ -79,6 +85,18 @@ Dataset is used from this [blog](https://blog.majestic.com/development/majestic-
 
 ```bash
 % csvdiff run --base base.csv --delta delta.csv --additions additions.csv --modifications modifications.csv
+```
+
+## Build locally
+
+```bash
+$ git clone https://github.com/aswinkarthik93/csvdiff
+$ go get ./...
+$ go build
+
+# To run tests
+$ go get github.com/stretchr/testify/assert
+$ go test -v ./...
 ```
 
 ## Algorithm
