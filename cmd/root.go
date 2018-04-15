@@ -40,9 +40,8 @@ The tool can output to stdout or a file in plaintext.
 It can also serialize the output as a binary file for any other go program to consume directly`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Main method getting called")
-	},
+	// Run: func(cmd *cobra.Command, args []string) {
+	// },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
