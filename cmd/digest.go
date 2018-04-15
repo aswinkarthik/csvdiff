@@ -15,12 +15,12 @@
 package cmd
 
 import (
-	"errors"
+	"encoding/json"
+	"fmt"
 	"log"
-	"os"
+	"strings"
 
 	"github.com/aswinkarthik93/csv-digest/pkg/digest"
-	"github.com/aswinkarthik93/csv-digest/pkg/encoder"
 	"github.com/spf13/cobra"
 )
 
@@ -31,36 +31,32 @@ var digestCmd = &cobra.Command{
 	Long: `Takes a Csv file and creates a digest for each line.
 The tool can output to stdout or a file in plaintext.
 It can also serialize the output as a binary file for any other go program to consume directly`,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 1 {
-			return nil
-		} else if len(args) > 1 {
-			return errors.New("requires exactly one arg - the csv file")
-		}
-		return errors.New("requires atleast one arg - the csv file")
-	},
 	Run: func(cmd *cobra.Command, args []string) {
-		runDigest(args[0])
+		runDigest()
 	},
 }
 
-func runDigest(csvFile string) {
-	config := digest.DigestConfig{
-		KeyPositions: primaryKeyPositions(),
-		Encoder:      encoder.JsonEncoder{},
-		Reader:       os.Stdin,
-		Writer:       os.Stdout,
+func runDigest() {
+	if str, err := json.Marshal(config); err == nil && debug {
+		fmt.Println(string(str))
+	} else if err != nil {
+		log.Fatal(err)
 	}
 
-	err := digest.DigestForFile(config)
+	digestConfig := digest.DigestConfig{
+		KeyPositions: config.GetKeyPositions(),
+		Encoder:      config.GetEncoder(),
+		Reader:       config.GetReader(),
+		Writer:       config.GetWriter(),
+	}
+
+	err := digest.DigestForFile(digestConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func primaryKeyPositions() []int {
-	return []int{0}
-}
+var debug bool
 
 func init() {
 	rootCmd.AddCommand(digestCmd)
@@ -73,4 +69,10 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// digestCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	digestCmd.Flags().StringVarP(&config.Input, "input", "i", "STDIN", "Input csv file to read from")
+	digestCmd.Flags().StringVarP(&config.Output, "output", "o", "STDOUT", "Digest filename to save to")
+	digestCmd.Flags().StringVarP(&config.Encoder, "encoder", "e", "json", "Encoder to use to output the digest. Available Encoders: "+strings.Join(GetEncoders(), ","))
+	digestCmd.Flags().IntSliceVarP(&config.KeyPositions, "key-positions", "k", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
+	digestCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
 }
