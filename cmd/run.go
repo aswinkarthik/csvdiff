@@ -19,9 +19,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/aswinkarthik93/csvdiff/pkg/digest"
+	spinner "github.com/briandowns/spinner"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +37,14 @@ var digestCmd = &cobra.Command{
 	},
 }
 
-var debug bool
+var (
+	debug     bool
+	noTime    bool
+	noSpinner bool
+
+	loader    *spinner.Spinner
+	startTime time.Time
+)
 
 var newLine []byte
 
@@ -42,28 +52,25 @@ func init() {
 	rootCmd.AddCommand(digestCmd)
 	newLine = []byte{'\n'}
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// digestCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 	digestCmd.Flags().StringVarP(&config.Base, "base", "b", "", "The base csv file")
 	digestCmd.Flags().StringVarP(&config.Delta, "delta", "d", "", "The delta csv file")
 	digestCmd.Flags().IntSliceVarP(&config.PrimaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	digestCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "value-columns", "", []int{}, "Value key positions of the Input CSV as comma separated values Eg: 1,2. Default is entire row")
-	digestCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
 	digestCmd.Flags().StringVarP(&config.Additions, "additions", "a", "STDOUT", "Output stream for the additions in delta file")
 	digestCmd.Flags().StringVarP(&config.Modifications, "modifications", "m", "STDOUT", "Output stream for the modifications in delta file")
+
+	digestCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
+	digestCmd.Flags().BoolVarP(&noTime, "no-time", "", false, "Do not measure time")
+	digestCmd.Flags().BoolVarP(&noSpinner, "no-spinner", "", false, "Do not display spinner")
 
 	digestCmd.MarkFlagRequired("base")
 	digestCmd.MarkFlagRequired("delta")
 }
 
 func run() {
+	if !noTime {
+		defer timeTrack(time.Now(), "csvdiff")
+	}
 	if str, err := json.Marshal(config); err == nil && debug {
 		fmt.Println(string(str))
 	} else if err != nil {
@@ -78,6 +85,14 @@ func run() {
 	baseChannel := make(chan message)
 	deltaChannel := make(chan message)
 
+	if !noSpinner {
+		loader = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+		loader.Writer = os.Stderr
+		loader.Color("cyan")
+		loader.Start()
+		loader.Suffix = " Computing hashes"
+	}
+
 	wg.Add(1)
 	go generateInBackground("base", baseConfig, &wg, baseChannel)
 
@@ -88,6 +103,11 @@ func run() {
 	go compareInBackgroud(baseChannel, deltaChannel, &wg)
 
 	wg.Wait()
+}
+
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
 }
 
 type message struct {
@@ -112,6 +132,9 @@ func generateInBackground(name string, config *digest.Config, wg *sync.WaitGroup
 func compareInBackgroud(baseChannel, deltaChannel <-chan message, wg *sync.WaitGroup) {
 	baseMessage := <-baseChannel
 	deltaMessage := <-deltaChannel
+	if !noSpinner {
+		loader.Suffix = " Comparing hashes"
+	}
 
 	additions, modifications := digest.Compare(baseMessage.digestMap, deltaMessage.digestMap)
 
@@ -120,12 +143,16 @@ func compareInBackgroud(baseChannel, deltaChannel <-chan message, wg *sync.WaitG
 	defer aWriter.Close()
 	defer mWriter.Close()
 
+	if !noSpinner {
+		loader.Stop()
+	}
 	print("Additions", aWriter, additions, deltaMessage.sourceMap)
 	print("Modifications", mWriter, modifications, deltaMessage.sourceMap)
 	wg.Done()
 }
 
 func print(recordType string, w io.Writer, positions []uint64, content map[uint64]string) {
+	fmt.Println()
 	fmt.Println(fmt.Sprintf("# %s: %d", recordType, len(positions)))
 	fmt.Println()
 
