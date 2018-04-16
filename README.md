@@ -1,6 +1,10 @@
 # csvdiff
 
-A diff tool for database tables dumped as csv files.
+A Blazingly fast diff tool for database tables dumped as csv files.
+
+## What is csvdiff?
+
+Csvdiff is a difftool to compute changes between two csv files. It is not a traditional diff tool. It is most suitable for comparing csv files dumped from database tables.
 
 ## Usage
 
@@ -37,48 +41,18 @@ go get -u github.com/aswinkarthik93/csvdiff
 - Non comma separators
 - Cannot be used as a generic difftool. Requires a column to be used as a primary key from the csv.
 
-## Example
+## Miscellaneous features
 
-Dataset is used from this [blog](https://blog.majestic.com/development/majestic-million-csv-daily/)
-
-- Base csv file
+- The `--primary-key` in an integer array. Specify comma separated positions if the table has a compound key. Using this primary key, it can figure out modifications. If the primary key changes, it is an addition.
 
 ```bash
-% cat ./examples/base-small.csv
-15,12,wordpress.com,com,207790,792348,wordpress.com,com,15,12,207589,791634
-43,1,europa.eu,eu,116613,353412,europa.eu,eu,41,1,119129,359818
-69,48,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491
-1615,905,proboards.com,com,19833,33110,proboards.com,com,1613,902,19835,33135
-1616,906,ccleaner.com,com,19831,32507,ccleaner.com,com,1614,903,19834,32463
-1617,907,doodle.com,com,19827,32902,doodle.com,com,1621,909,19787,32822
+% csvdiff run --base base.csv --delta delta.csv --primary-key 0,1
 ```
 
-- Delta csv file
+- If you want to compare only few columns in the csv when computing hash,
 
 ```bash
-% cat ./examples/delta-small.csv
-15,12,wordpress.com,com,207790,792348,wordpress.com,com,15,12,207589,791634
-43,1,europa.eu,eu,116613,353412,europa.eu,eu,41,1,119129,359818
-69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491
-24564,907,completely-newsite.com,com,19827,32902,completely-newsite.com,com,1621,909,19787,32822
-```
-
-- On run of csvdiff
-
-```bash
-% csvdiff run --base ./examples/base-small.csv --delta ./examples/delta-small.csv --key-positions 0
-2018/04/15 19:15:48 Generated Digest for base
-2018/04/15 19:15:48 Generated Digest for delta
-2018/04/15 19:15:48 Additions Count: 1
-24564,907,completely-newsite.com,com,19827,32902,completely-newsite.com,com,1621,909,19787,32822
-2018/04/15 19:15:48 Modifications Count: 1
-69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491
-```
-
-- The `--key-positions` in an integer array. Specify comma separated positions if the table has a compound key. Using this primary key, it can figure out modifications. If the primary key changes, it is an addition.
-
-```bash
-% csvdiff run --base base.csv --delta delta.csv --key-positions 0,1
+% csvdiff run --base base.csv --delta delta.csv --primary-key 0,1 --value-columns 2
 ```
 
 - **Additions** and **Modifications** can be written to files directly instead of STDOUT.
