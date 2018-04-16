@@ -16,26 +16,27 @@ func TestCreateDigest(t *testing.T) {
 
 	expectedDigest := Digest{Key: firstKey, Value: firstLineDigest, Row: firstLine}
 
-	actualDigest := CreateDigest(strings.Split(firstLine, ","), []int{0})
+	actualDigest := CreateDigest(strings.Split(firstLine, Separator), []int{0}, []int{})
 
 	assert.Equal(t, expectedDigest, actualDigest)
 }
 
 func TestDigestForFile(t *testing.T) {
-	firstLine := "1,first-line"
+	firstLine := "1,first-line,some-columne,friday"
 	firstKey := xxhash.Sum64String("1")
 	firstDigest := xxhash.Sum64String(firstLine)
 
-	secondLine := "2,second-line"
+	secondLine := "2,second-line,nobody-needs-this,saturday"
 	secondKey := xxhash.Sum64String("2")
 	secondDigest := xxhash.Sum64String(secondLine)
 
 	var outputBuffer bytes.Buffer
 
-	testConfig := DigestConfig{
+	testConfig := &Config{
 		Reader:       strings.NewReader(firstLine + "\n" + secondLine),
 		Writer:       &outputBuffer,
 		KeyPositions: []int{0},
+		Key:          []int{0},
 		SourceMap:    true,
 	}
 
@@ -49,10 +50,11 @@ func TestDigestForFile(t *testing.T) {
 	assert.Equal(t, expectedSourceMap, sourceMap)
 
 	// No source map
-	testConfigWithoutSourceMap := DigestConfig{
+	testConfigWithoutSourceMap := &Config{
 		Reader:       strings.NewReader(firstLine + "\n" + secondLine),
 		Writer:       &outputBuffer,
 		KeyPositions: []int{0},
+		Key:          []int{0},
 		SourceMap:    false,
 	}
 

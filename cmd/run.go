@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"sync"
 
 	"github.com/aswinkarthik93/csvdiff/pkg/digest"
@@ -54,7 +53,8 @@ func init() {
 
 	digestCmd.Flags().StringVarP(&config.Base, "base", "b", "", "The base csv file")
 	digestCmd.Flags().StringVarP(&config.Delta, "delta", "d", "", "The delta csv file")
-	digestCmd.Flags().IntSliceVarP(&config.KeyPositions, "key-positions", "k", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
+	digestCmd.Flags().IntSliceVarP(&config.PrimaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
+	digestCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "value-columns", "", []int{}, "Value key positions of the Input CSV as comma separated values Eg: 1,2. Default is entire row")
 	digestCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
 	digestCmd.Flags().StringVarP(&config.Additions, "additions", "a", "STDOUT", "Output stream for the additions in delta file")
 	digestCmd.Flags().StringVarP(&config.Modifications, "modifications", "m", "STDOUT", "Output stream for the modifications in delta file")
@@ -70,18 +70,9 @@ func run() {
 		log.Fatal(err)
 	}
 
-	baseConfig := digest.DigestConfig{
-		KeyPositions: config.GetKeyPositions(),
-		Reader:       config.GetBaseReader(),
-		Writer:       os.Stdout,
-	}
+	baseConfig := digest.NewConfig(config.GetBaseReader(), false, config.GetPrimaryKeys(), config.GetValueColumns())
 
-	deltaConfig := digest.DigestConfig{
-		KeyPositions: config.GetKeyPositions(),
-		Reader:       config.GetDeltaReader(),
-		Writer:       os.Stdout,
-		SourceMap:    true,
-	}
+	deltaConfig := digest.NewConfig(config.GetDeltaReader(), true, config.GetPrimaryKeys(), config.GetValueColumns())
 
 	var wg sync.WaitGroup
 	baseChannel := make(chan message)
@@ -104,7 +95,7 @@ type message struct {
 	sourceMap map[uint64]string
 }
 
-func generateInBackground(name string, config digest.DigestConfig, wg *sync.WaitGroup, channel chan<- message) {
+func generateInBackground(name string, config *digest.Config, wg *sync.WaitGroup, channel chan<- message) {
 	digest, sourceMap, err := digest.Create(config)
 	if err != nil {
 		panic(err)

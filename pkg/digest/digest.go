@@ -8,6 +8,8 @@ import (
 	"github.com/cespare/xxhash"
 )
 
+const Separator = ","
+
 // Digest represents the binding of the key of each csv line
 // and the digest that gets created for the entire line
 type Digest struct {
@@ -18,28 +20,34 @@ type Digest struct {
 
 // CreateDigest creates a Digest for each line of csv.
 // There will be one Digest per line
-func CreateDigest(csv []string, keyPositions []int) Digest {
-	keyCsv := make([]string, len(keyPositions))
-	for i, pos := range keyPositions {
-		keyCsv[i] = csv[pos]
-	}
-
-	row := strings.Join(csv, ",")
-	key := xxhash.Sum64String(strings.Join(keyCsv, ","))
-	digest := xxhash.Sum64String(row)
+func CreateDigest(csv []string, pKey Positions, pRow Positions) Digest {
+	row := strings.Join(csv, Separator)
+	key := xxhash.Sum64String(pKey.MapToValue(csv))
+	digest := xxhash.Sum64String(pRow.MapToValue(csv))
 
 	return Digest{Key: key, Value: digest, Row: row}
 
 }
 
-type DigestConfig struct {
+type Config struct {
 	KeyPositions []int
+	Key          Positions
+	Value        Positions
 	Reader       io.Reader
 	Writer       io.Writer
 	SourceMap    bool
 }
 
-func Create(config DigestConfig) (map[uint64]uint64, map[uint64]string, error) {
+func NewConfig(r io.Reader, createSourceMap bool, primaryKey Positions, valueColumns Positions) *Config {
+	return &Config{
+		Reader:    r,
+		SourceMap: createSourceMap,
+		Key:       primaryKey,
+		Value:     valueColumns,
+	}
+}
+
+func Create(config *Config) (map[uint64]uint64, map[uint64]string, error) {
 	reader := csv.NewReader(config.Reader)
 
 	output := make(map[uint64]uint64)
@@ -52,7 +60,7 @@ func Create(config DigestConfig) (map[uint64]uint64, map[uint64]string, error) {
 			}
 			return nil, nil, err
 		}
-		digest := CreateDigest(line, config.KeyPositions)
+		digest := CreateDigest(line, config.Key, config.Value)
 		output[digest.Key] = digest.Value
 		if config.SourceMap {
 			sourceMap[digest.Key] = digest.Row
