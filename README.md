@@ -10,12 +10,10 @@ Csvdiff is a difftool to compute changes between two csv files. It is not a trad
 
 ```bash
 $ csvdiff run --base base.csv --delta delta.csv
-2018/04/15 18:46:23 Generated Digest for delta
-2018/04/15 18:46:24 Generated Digest for base
-2018/04/15 18:46:24 Additions Count: 1
+# Additions: 1
 ...
 
-2018/04/15 18:46:24 Modifications Count: 20
+# Modifications: 20
 ...
 ```
 

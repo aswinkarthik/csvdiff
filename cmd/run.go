@@ -101,7 +101,9 @@ func generateInBackground(name string, config *digest.Config, wg *sync.WaitGroup
 		panic(err)
 	}
 
-	log.Println("Generated Digest for " + name)
+	if debug {
+		log.Println("Generated Digest for " + name)
+	}
 	channel <- message{digestMap: digest, sourceMap: sourceMap}
 	close(channel)
 	wg.Done()
@@ -118,16 +120,14 @@ func compareInBackgroud(baseChannel, deltaChannel <-chan message, wg *sync.WaitG
 	defer aWriter.Close()
 	defer mWriter.Close()
 
-	fmt.Println()
 	print("Additions", aWriter, additions, deltaMessage.sourceMap)
-	fmt.Println()
 	print("Modifications", mWriter, modifications, deltaMessage.sourceMap)
-	fmt.Println()
 	wg.Done()
 }
 
 func print(recordType string, w io.Writer, positions []uint64, content map[uint64]string) {
-	log.Println(fmt.Sprintf("%s Count: %d", recordType, len(positions)))
+	fmt.Println(fmt.Sprintf("# %s: %d", recordType, len(positions)))
+	fmt.Println()
 
 	for _, i := range positions {
 		w.Write([]byte(content[i]))
