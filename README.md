@@ -1,5 +1,7 @@
 # csvdiff
 
+[![Build Status](https://travis-ci.org/aswinkarthik93/csvdiff.svg?branch=master)](https://travis-ci.org/aswinkarthik93/csvdiff)
+
 A Blazingly fast diff tool for database tables dumped as csv files.
 
 ## What is csvdiff?
