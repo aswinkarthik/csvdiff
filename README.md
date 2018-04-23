@@ -88,3 +88,7 @@ $ go test -v ./...
 ## Credits
 
 - Uses 64 bit [xxHash](https://cyan4973.github.io/xxHash/) algorithm, an extremely fast non-cryptographic hash algorithm, for creating the hash. Implementations from [cespare](https://github.com/cespare/xxhash)
+
+## [Benchmarks](/benchmark)
+
+- It can compare 10 Million CSV records in under 2 minutes.
