@@ -8,6 +8,7 @@ import (
 	"github.com/cespare/xxhash"
 )
 
+// Separator for CSV. Not configurable for now.
 const Separator = ","
 
 // Digest represents the binding of the key of each csv line
@@ -29,6 +30,8 @@ func CreateDigest(csv []string, pKey Positions, pRow Positions) Digest {
 
 }
 
+// Config represents configurations that can be passed
+// to create a Digest.
 type Config struct {
 	KeyPositions []int
 	Key          Positions
@@ -38,6 +41,7 @@ type Config struct {
 	SourceMap    bool
 }
 
+// NewConfig creates an instance of Config struct.
 func NewConfig(r io.Reader, createSourceMap bool, primaryKey Positions, valueColumns Positions) *Config {
 	return &Config{
 		Reader:    r,
@@ -47,6 +51,9 @@ func NewConfig(r io.Reader, createSourceMap bool, primaryKey Positions, valueCol
 	}
 }
 
+// Create can create a Digest using the Configurations passed.
+// It returns the digest as a map[uint64]uint64.
+// It can also keep track of the Source line.
 func Create(config *Config) (map[uint64]uint64, map[uint64]string, error) {
 	reader := csv.NewReader(config.Reader)
 

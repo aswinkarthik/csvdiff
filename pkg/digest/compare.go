@@ -1,5 +1,7 @@
 package digest
 
+// Compare compares two Digest maps and returns the additions and modification
+// keys as arrays.
 func Compare(baseDigest, newDigest map[uint64]uint64) (additions []uint64, modifications []uint64) {
 	maxSize := len(newDigest)
 	additions = make([]uint64, maxSize)
