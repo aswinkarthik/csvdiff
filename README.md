@@ -8,6 +8,10 @@ A Blazingly fast diff tool for database tables dumped as csv files.
 
 Csvdiff is a difftool to compute changes between two csv files. It is not a traditional diff tool. It is most suitable for comparing csv files dumped from database tables.
 
+## Demo
+
+![demo](/demo/csvdiff.gif)
+
 ## Usage
 
 ```bash
