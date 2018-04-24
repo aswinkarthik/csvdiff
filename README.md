@@ -1,6 +1,9 @@
 # csvdiff
 
 [![Build Status](https://travis-ci.org/aswinkarthik93/csvdiff.svg?branch=master)](https://travis-ci.org/aswinkarthik93/csvdiff)
+[![Go Doc](https://godoc.org/github.com/aswinkarthik93/csvdiff?status.svg)](https://godoc.org/github.com/aswinkarthik93/csvdiff)
+[![Go Report Card](https://goreportcard.com/badge/github.com/aswinkarthik93/csvdiff)](https://goreportcard.com/report/github.com/aswinkarthik93/csvdiff)
+[![Latest release](https://img.shields.io/github/release/aswinkarthik93/csvdiff.svg)](https://github.com/aswinkarthik93/csvdiff/releases)
 
 A Blazingly fast diff tool for database tables dumped as csv files.
 
