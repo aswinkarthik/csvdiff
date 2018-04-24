@@ -2,6 +2,7 @@ language: go
 go:
 - 1.10.x
 install:
-- go get github.com/stretchr/testify/assert
+- curl https://glide.sh/get | sh
+- glide install
 script:
 - go test -v ./...
