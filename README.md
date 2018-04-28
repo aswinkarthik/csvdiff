@@ -37,28 +37,28 @@ $ csvdiff run --base base.csv --delta delta.csv
 - For MacOS
 
 ```bash
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.0/csvdiff_0.1.0_darwin_amd64.tar.gz | tar xfz -
+curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.2/csvdiff_0.1.2_darwin_amd64.tar.gz | tar xfz -
 ```
 
 - For centos
 
 ```bash
-yum install https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.1/csvdiff_0.1.1_linux_64-bit.rpm
+yum install https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.2/csvdiff_0.1.2_linux_64-bit.rpm
 ```
 
 - For debian
 
 ```
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.1/csvdiff_0.1.1_linux_64-bit.deb | dpkg --install -
+curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.2/csvdiff_0.1.2_linux_64-bit.deb | dpkg --install -
 ```
 
 - For Linux
 
 ```bash
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.0/csvdiff_0.1.0_linux_amd64.tar.gz | tar xfz -
+curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.2/csvdiff_0.1.2_linux_amd64.tar.gz | tar xfz -
 ```
 
-- For [Windows](https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.0/csvdiff_0.1.0_windows_amd64.tar.gz)
+- For [Windows](https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.2/csvdiff_0.1.2_windows_amd64.tar.gz)
 
 - Build using Go
 
