@@ -1,3 +1,4 @@
+sudo: required
 language: go
 go:
 - 1.10.x
@@ -7,4 +8,4 @@ install:
 script:
 - go test -v ./...
 after_success:
-- test -n "$TRAVIS_TAG" && curl -sL https://git.io/goreleaser | bash
+- bash -l ./release.sh
