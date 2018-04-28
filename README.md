@@ -49,7 +49,8 @@ yum install https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.2/c
 - For debian
 
 ```
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.2/csvdiff_0.1.2_linux_64-bit.deb | dpkg --install -
+curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v0.1.2/csvdiff_0.1.2_linux_64-bit.deb -O
+dpkg --install csvdiff_*_linux_64-bit.deb
 ```
 
 - For Linux
