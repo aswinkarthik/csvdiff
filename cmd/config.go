@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/aswinkarthik93/csvdiff/pkg/digest"
 )
@@ -18,6 +20,7 @@ func init() {
 type Config struct {
 	PrimaryKeyPositions  []int
 	ValueColumnPositions []int
+	Format               string
 	Base                 string
 	Delta                string
 	Additions            string
@@ -81,4 +84,36 @@ func getWriter(outputStream string) io.WriteCloser {
 		return file
 	}
 	return os.Stdout
+}
+
+// Validate validates the config object
+// and returns error if not valid.
+func (c *Config) Validate() error {
+	allFormats := []string{stdout}
+
+	formatValid := false
+	for _, format := range allFormats {
+		if strings.ToLower(c.Format) == format {
+			formatValid = true
+		}
+	}
+
+	if !formatValid {
+		return errors.New("Specified format is not valid")
+	}
+
+	return nil
+}
+
+const (
+	stdout = "stdout"
+)
+
+// Formatter instantiates a new formatted
+// based on config.Format
+func (c *Config) Formatter() Formatter {
+	if strings.ToLower(c.Format) == stdout {
+		return &StdoutFormatter{}
+	}
+	return &StdoutFormatter{}
 }

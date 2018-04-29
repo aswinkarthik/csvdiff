@@ -77,17 +77,7 @@ Most suitable for csv files created from database tables`,
 
 		diff := digest.Diff(baseConfig, deltaConfig)
 
-		fmt.Printf("Additions %d\n", len(diff.Additions))
-		fmt.Printf("Modifications %d\n", len(diff.Modifications))
-		fmt.Println("Rows:")
-
-		for _, added := range diff.Additions {
-			fmt.Printf("%s,%s\n", added, "ADDED")
-		}
-
-		for _, modified := range diff.Modifications {
-			fmt.Printf("%s,%s\n", modified, "MODIFIED")
-		}
+		config.Formatter().Format(diff)
 	},
 }
 
