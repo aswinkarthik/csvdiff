@@ -1,4 +1,4 @@
 package cmd
 
 // VersionString to display on --version call
-const VersionString = "csvdiff v0.1.1"
+const VersionString = "csvdiff v1.0.0"
