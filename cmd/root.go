@@ -33,8 +33,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-var timed bool
+var (
+	cfgFile string
+	timed   bool
+	version bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -43,6 +46,10 @@ var rootCmd = &cobra.Command{
 	Long: `Differentiates two csv files and finds out the additions and modifications.
 Most suitable for csv files created from database tables`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if version {
+			return nil
+		}
+
 		if len(args) != 2 {
 			return errors.New("Pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
 		}
@@ -51,6 +58,11 @@ Most suitable for csv files created from database tables`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		if version {
+			fmt.Println(VersionString)
+			return
+		}
+
 		if timed {
 			defer timeTrack(time.Now(), "csvdiff")
 		}
@@ -104,6 +116,7 @@ func init() {
 	rootCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
+	rootCmd.Flags().BoolVarP(&version, "version", "", false, "Display version")
 }
 
 // initConfig reads in config file and ENV variables if set.
