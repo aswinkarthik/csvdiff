@@ -49,7 +49,7 @@ var (
 var newLine []byte
 
 func init() {
-	rootCmd.AddCommand(digestCmd)
+	// rootCmd.AddCommand(digestCmd)
 	newLine = []byte{'\n'}
 
 	digestCmd.Flags().StringVarP(&config.Base, "base", "b", "", "The base csv file")
@@ -77,9 +77,9 @@ func run() {
 		log.Fatal(err)
 	}
 
-	baseConfig := digest.NewConfig(config.GetBaseReader(), false, config.GetPrimaryKeys(), config.GetValueColumns())
+	baseConfig := digest.NewConfig(config.GetBaseReader(), config.GetPrimaryKeys(), config.GetValueColumns())
 
-	deltaConfig := digest.NewConfig(config.GetDeltaReader(), true, config.GetPrimaryKeys(), config.GetValueColumns())
+	deltaConfig := digest.NewConfig(config.GetDeltaReader(), config.GetPrimaryKeys(), config.GetValueColumns())
 
 	var wg sync.WaitGroup
 	baseChannel := make(chan message)

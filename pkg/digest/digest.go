@@ -38,7 +38,7 @@ type Config struct {
 }
 
 // NewConfig creates an instance of Config struct.
-func NewConfig(r io.Reader, createSourceMap bool, primaryKey Positions, valueColumns Positions) *Config {
+func NewConfig(r io.Reader, primaryKey Positions, valueColumns Positions) *Config {
 	return &Config{
 		Reader: r,
 		Key:    primaryKey,
