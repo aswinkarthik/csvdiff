@@ -46,18 +46,27 @@ var rootCmd = &cobra.Command{
 	Long: `Differentiates two csv files and finds out the additions and modifications.
 Most suitable for csv files created from database tables`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
+		// If its --version flag, dont thrown error
 		if version {
 			return nil
 		}
 
+		// Validate args
 		if len(args) != 2 {
 			return errors.New("Pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
 		}
+
+		// Validate flags
+		if err := config.Validate(); err != nil {
+			return err
+		}
+
 		return nil
 	},
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		// Print version and exit program
 		if version {
 			fmt.Println(VersionString)
 			return
