@@ -51,7 +51,7 @@ const bufferSize = 512
 // Create can create a Digest using the Configurations passed.
 // It returns the digest as a map[uint64]uint64.
 // It can also keep track of the Source line.
-func Create(config *Config) (map[uint64]uint64, map[uint64]string, error) {
+func Create(config *Config) map[uint64]uint64 {
 	maxProcs := runtime.NumCPU()
 	reader := csv.NewReader(config.Reader)
 
@@ -67,30 +67,19 @@ func Create(config *Config) (map[uint64]uint64, map[uint64]string, error) {
 		}
 	}
 
-	return output, nil, nil
+	return output
 }
 
 func readAndProcess(config *Config, reader *csv.Reader, digestChannel chan<- []Digest) {
-	eofReached := false
 	var wg sync.WaitGroup
-	for !eofReached {
-		lines := make([][]string, bufferSize)
-
-		lineCount := 0
-		for ; lineCount < bufferSize; lineCount++ {
-			line, err := reader.Read()
-			lines[lineCount] = line
-			if err != nil {
-				if err == io.EOF {
-					eofReached = true
-					break
-				}
-				return
-			}
-		}
-
+	for {
+		lines, eofReached := getNextNLines(reader)
 		wg.Add(1)
-		go createDigestForNLines(lines[:lineCount], config, digestChannel, &wg)
+		go createDigestForNLines(lines, config, digestChannel, &wg)
+
+		if eofReached {
+			break
+		}
 	}
 	wg.Wait()
 	close(digestChannel)

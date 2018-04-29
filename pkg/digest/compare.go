@@ -2,7 +2,6 @@ package digest
 
 import (
 	"encoding/csv"
-	"io"
 	"runtime"
 	"strings"
 	"sync"
@@ -55,7 +54,7 @@ type diffMessage struct {
 // Diff will differentiate between two given configs
 func Diff(baseConfig, deltaConfig *Config) Difference {
 	maxProcs := runtime.NumCPU()
-	base, _, _ := Create(baseConfig)
+	base := Create(baseConfig)
 
 	additions := make([]string, 0, len(base))
 	modifications := make([]string, 0, len(base))
@@ -79,26 +78,15 @@ func Diff(baseConfig, deltaConfig *Config) Difference {
 
 func readAndCompare(base map[uint64]uint64, config *Config, msgChannel chan<- []diffMessage) {
 	reader := csv.NewReader(config.Reader)
-	eofReached := false
 	var wg sync.WaitGroup
-	for !eofReached {
-		lines := make([][]string, bufferSize)
-
-		lineCount := 0
-		for ; lineCount < bufferSize; lineCount++ {
-			line, err := reader.Read()
-			lines[lineCount] = line
-			if err != nil {
-				if err == io.EOF {
-					eofReached = true
-					break
-				}
-				return
-			}
-		}
-
+	for {
+		lines, eofReached := getNextNLines(reader)
 		wg.Add(1)
-		go compareDigestForNLines(base, lines[:lineCount], config, msgChannel, &wg)
+		go compareDigestForNLines(base, lines, config, msgChannel, &wg)
+
+		if eofReached {
+			break
+		}
 	}
 	wg.Wait()
 	close(msgChannel)

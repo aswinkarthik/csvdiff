@@ -116,15 +116,12 @@ type message struct {
 }
 
 func generateInBackground(name string, config *digest.Config, wg *sync.WaitGroup, channel chan<- message) {
-	digest, sourceMap, err := digest.Create(config)
-	if err != nil {
-		panic(err)
-	}
+	digest := digest.Create(config)
 
 	if debug {
 		log.Println("Generated Digest for " + name)
 	}
-	channel <- message{digestMap: digest, sourceMap: sourceMap}
+	channel <- message{digestMap: digest}
 	close(channel)
 	wg.Done()
 }
