@@ -89,7 +89,7 @@ func getWriter(outputStream string) io.WriteCloser {
 // Validate validates the config object
 // and returns error if not valid.
 func (c *Config) Validate() error {
-	allFormats := []string{stdout}
+	allFormats := []string{rowmark, jsonFormat}
 
 	formatValid := false
 	for _, format := range allFormats {
@@ -106,14 +106,18 @@ func (c *Config) Validate() error {
 }
 
 const (
-	stdout = "stdout"
+	rowmark    = "rowmark"
+	jsonFormat = "json"
 )
 
 // Formatter instantiates a new formatted
 // based on config.Format
 func (c *Config) Formatter() Formatter {
-	if strings.ToLower(c.Format) == stdout {
-		return &StdoutFormatter{}
+	format := strings.ToLower(c.Format)
+	if format == rowmark {
+		return &RowMarkFormatter{}
+	} else if format == jsonFormat {
+		return &JSONFormatter{}
 	}
-	return &StdoutFormatter{}
+	return &RowMarkFormatter{}
 }

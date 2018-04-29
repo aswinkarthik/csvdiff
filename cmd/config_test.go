@@ -36,27 +36,37 @@ func TestConfigValidate(t *testing.T) {
 	config = &cmd.Config{}
 	assert.Error(t, config.Validate())
 
-	config = &cmd.Config{Format: "stdout"}
+	config = &cmd.Config{Format: "rowmark"}
 	assert.NoError(t, config.Validate())
 
-	config = &cmd.Config{Format: "stdOUT"}
+	config = &cmd.Config{Format: "rowMARK"}
+	assert.NoError(t, config.Validate())
+
+	config = &cmd.Config{Format: "json"}
 	assert.NoError(t, config.Validate())
 }
 
 func TestDefaultConfigFormatter(t *testing.T) {
 	config := &cmd.Config{}
 
-	formatter, ok := config.Formatter().(*cmd.StdoutFormatter)
+	formatter, ok := config.Formatter().(*cmd.RowMarkFormatter)
 
 	assert.True(t, ok)
 	assert.NotNil(t, formatter)
 }
 
-func TestStdoutConfigFormatter(t *testing.T) {
-	config := &cmd.Config{Format: "stdout"}
+func TestConfigFormatter(t *testing.T) {
+	var config *cmd.Config
+	var formatter cmd.Formatter
+	var ok bool
 
-	formatter, ok := config.Formatter().(*cmd.StdoutFormatter)
+	config = &cmd.Config{Format: "rowmark"}
+	formatter, ok = config.Formatter().(*cmd.RowMarkFormatter)
+	assert.True(t, ok)
+	assert.NotNil(t, formatter)
 
+	config = &cmd.Config{Format: "json"}
+	formatter, ok = config.Formatter().(*cmd.JSONFormatter)
 	assert.True(t, ok)
 	assert.NotNil(t, formatter)
 }
