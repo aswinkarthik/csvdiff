@@ -20,3 +20,5 @@ out/
 # End of https://www.gitignore.io/api/go
 
 vendor/
+
+majestic_million*.csv

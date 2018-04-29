@@ -21,26 +21,73 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
+	"time"
 
+	"github.com/aswinkarthik93/csvdiff/pkg/digest"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile string
+	timed   bool
+	version bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "csvdiff",
+	Use:   "csvdiff <base-csv> <delta-csv>",
 	Short: "A diff tool for database tables dumped as csv files",
 	Long: `Differentiates two csv files and finds out the additions and modifications.
 Most suitable for csv files created from database tables`,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		// If its --version flag, dont thrown error
+		if version {
+			return nil
+		}
+
+		// Validate args
+		if len(args) != 2 {
+			return errors.New("Pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
+		}
+
+		// Validate flags
+		if err := config.Validate(); err != nil {
+			return err
+		}
+
+		return nil
+	},
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) {
-	// },
+	Run: func(cmd *cobra.Command, args []string) {
+		// Print version and exit program
+		if version {
+			fmt.Println(VersionString)
+			return
+		}
+
+		if timed {
+			defer timeTrack(time.Now(), "csvdiff")
+		}
+
+		baseFile := newReadCloser(args[0])
+		defer baseFile.Close()
+		deltaFile := newReadCloser(args[1])
+		defer deltaFile.Close()
+
+		baseConfig := digest.NewConfig(baseFile, config.GetPrimaryKeys(), config.GetValueColumns())
+		deltaConfig := digest.NewConfig(deltaFile, config.GetPrimaryKeys(), config.GetValueColumns())
+
+		diff := digest.Diff(baseConfig, deltaConfig)
+
+		config.Formatter().Format(diff, os.Stdout)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -63,6 +110,13 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	rootCmd.Flags().IntSliceVarP(&config.PrimaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
+	rootCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
+	rootCmd.Flags().StringVarP(&config.Format, "format", "", "rowmark", "Available (rowmark|json)")
+
+	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
+	rootCmd.Flags().BoolVarP(&version, "version", "", false, "Display version")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -89,4 +143,18 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func newReadCloser(filename string) io.ReadCloser {
+	file, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	return file
+}
+
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	fmt.Fprintln(os.Stderr, fmt.Sprintf("%s took %s", name, elapsed))
 }

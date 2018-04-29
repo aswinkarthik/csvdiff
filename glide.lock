@@ -1,12 +1,8 @@
-hash: a42b65bfb8f09e42a12971ff7d5c5b0106a86382a5dd90fc3e5b29d58c913f03
-updated: 2018-04-24T14:50:45.370899074+05:30
+hash: 9e942e84862c4047de33d9cbf763351d1baa5cd7e8f4c2745af2856a9570e0a8
+updated: 2018-04-29T14:34:53.907789+05:30
 imports:
-- name: github.com/briandowns/spinner
-  version: 48dbb65d7bd5c74ab50d53d04c949f20e3d14944
 - name: github.com/cespare/xxhash
   version: 5c37fe3735342a2e0d01c87a907579987c8936cc
-- name: github.com/fatih/color
-  version: 507f6050b8568533fb3f5504de8e5205fa62a114
 - name: github.com/fsnotify/fsnotify
   version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: github.com/hashicorp/hcl
@@ -25,10 +21,6 @@ imports:
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
   version: 2c9e9502788518c97fe44e8955cd069417ee89df
-- name: github.com/mattn/go-colorable
-  version: 7dc3415be66d7cc68bf0182f35c8d31f8d2ad8a7
-- name: github.com/mattn/go-isatty
-  version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure

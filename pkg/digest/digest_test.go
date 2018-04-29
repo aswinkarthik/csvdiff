@@ -1,10 +1,10 @@
-package digest
+package digest_test
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 
+	"github.com/aswinkarthik93/csvdiff/pkg/digest"
 	"github.com/cespare/xxhash"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,9 +14,9 @@ func TestCreateDigest(t *testing.T) {
 	firstKey := xxhash.Sum64String("1")
 	firstLineDigest := xxhash.Sum64String(firstLine)
 
-	expectedDigest := Digest{Key: firstKey, Value: firstLineDigest, Row: firstLine}
+	expectedDigest := digest.Digest{Key: firstKey, Value: firstLineDigest}
 
-	actualDigest := CreateDigest(strings.Split(firstLine, Separator), []int{0}, []int{})
+	actualDigest := digest.CreateDigest(strings.Split(firstLine, digest.Separator), []int{0}, []int{})
 
 	assert.Equal(t, expectedDigest, actualDigest)
 }
@@ -25,42 +25,32 @@ func TestDigestForFile(t *testing.T) {
 	firstLine := "1,first-line,some-columne,friday"
 	firstKey := xxhash.Sum64String("1")
 	firstDigest := xxhash.Sum64String(firstLine)
+	fridayDigest := xxhash.Sum64String("friday")
 
 	secondLine := "2,second-line,nobody-needs-this,saturday"
 	secondKey := xxhash.Sum64String("2")
 	secondDigest := xxhash.Sum64String(secondLine)
+	saturdayDigest := xxhash.Sum64String("saturday")
 
-	var outputBuffer bytes.Buffer
-
-	testConfig := &Config{
-		Reader:       strings.NewReader(firstLine + "\n" + secondLine),
-		Writer:       &outputBuffer,
-		KeyPositions: []int{0},
-		Key:          []int{0},
-		SourceMap:    true,
+	testConfig := &digest.Config{
+		Reader: strings.NewReader(firstLine + "\n" + secondLine),
+		Key:    []int{0},
 	}
 
-	actualDigest, sourceMap, err := Create(testConfig)
+	actualDigest := digest.Create(testConfig)
 
 	expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
-	expectedSourceMap := map[uint64]string{firstKey: firstLine, secondKey: secondLine}
 
-	assert.Nil(t, err, "error at DigestForFile")
 	assert.Equal(t, expectedDigest, actualDigest)
-	assert.Equal(t, expectedSourceMap, sourceMap)
 
-	// No source map
-	testConfigWithoutSourceMap := &Config{
-		Reader:       strings.NewReader(firstLine + "\n" + secondLine),
-		Writer:       &outputBuffer,
-		KeyPositions: []int{0},
-		Key:          []int{0},
-		SourceMap:    false,
+	testConfig = &digest.Config{
+		Reader: strings.NewReader(firstLine + "\n" + secondLine),
+		Key:    []int{0},
+		Value:  []int{3},
 	}
 
-	actualDigest, sourceMap, err = Create(testConfigWithoutSourceMap)
+	actualDigest = digest.Create(testConfig)
+	expectedDigest = map[uint64]uint64{firstKey: fridayDigest, secondKey: saturdayDigest}
 
-	assert.Nil(t, err, "error at DigestForFile")
 	assert.Equal(t, expectedDigest, actualDigest)
-	assert.Equal(t, map[uint64]string{}, sourceMap)
 }

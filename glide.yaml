@@ -1,7 +1,5 @@
 package: github.com/aswinkarthik93/csvdiff
 import:
-- package: github.com/briandowns/spinner
-  version: ^1.0.0
 - package: github.com/cespare/xxhash
   version: ^1.0.0
 - package: github.com/mitchellh/go-homedir
