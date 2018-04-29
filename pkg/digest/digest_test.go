@@ -2,6 +2,7 @@ package digest
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 
@@ -63,4 +64,21 @@ func TestDigestForFile(t *testing.T) {
 	assert.Nil(t, err, "error at DigestForFile")
 	assert.Equal(t, expectedDigest, actualDigest)
 	assert.Equal(t, map[uint64]string{}, sourceMap)
+}
+
+func TestCreatePerformance(t *testing.T) {
+	file, err := os.Open("../../benchmark/majestic_million.csv")
+	defer file.Close()
+	assert.NoError(t, err)
+
+	config := &Config{
+		Reader:       file,
+		KeyPositions: []int{0},
+		Key:          []int{},
+		SourceMap:    false,
+	}
+
+	result, _, _ := Create(config)
+
+	assert.Equal(t, 998390, len(result))
 }
