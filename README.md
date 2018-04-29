@@ -24,11 +24,10 @@ Csvdiff is a difftool to compute changes between two csv files.
 ## Usage
 
 ```bash
-$ csvdiff run --base base.csv --delta delta.csv
+$ csvdiff base.csv delta.csv
 # Additions: 1
-...
-
 # Modifications: 20
+# Rows:
 ...
 ```
 
@@ -85,22 +84,41 @@ go get -u github.com/aswinkarthik93/csvdiff
 
 ## Miscellaneous features
 
+- By default, it marks the row as ADDED or MODIFIED by introducing a new column at last.
+
+```bash
+% csvdiff examples/base-small.csv examples/delta-small.csv
+Additions 1
+Modifications 1
+Rows:
+24564,907,completely-newsite.com,com,19827,32902,completely-newsite.com,com,1621,909,19787,32822,ADDED
+69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491,MODIFIED
+```
+
 - The `--primary-key` in an integer array. Specify comma separated positions if the table has a compound key. Using this primary key, it can figure out modifications. If the primary key changes, it is an addition.
 
 ```bash
-% csvdiff run --base base.csv --delta delta.csv --primary-key 0,1
+% csvdiff base.csv delta.csv --primary-key 0,1
 ```
 
 - If you want to compare only few columns in the csv when computing hash,
 
 ```bash
-% csvdiff run --base base.csv --delta delta.csv --primary-key 0,1 --value-columns 2
+% csvdiff base.csv delta.csv --primary-key 0,1 --columns 2
 ```
 
-- **Additions** and **Modifications** can be written to files directly instead of STDOUT.
+- Supports JSON format for post processing
 
 ```bash
-% csvdiff run --base base.csv --delta delta.csv --additions additions.csv --modifications modifications.csv
+% csvdiff examples/base-small.csv examples/delta-small.csv --format json
+{
+  "Additions": [
+    "24564,907,completely-newsite.com,com,19827,32902,completely-newsite.com,com,1621,909,19787,32822"
+  ],
+  "Modifications": [
+    "69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491"
+  ]
+}
 ```
 
 ## Build locally
