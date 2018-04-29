@@ -51,7 +51,7 @@ Most suitable for csv files created from database tables`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		if !timed {
+		if timed {
 			defer timeTrack(time.Now(), "csvdiff")
 		}
 
@@ -103,7 +103,6 @@ func init() {
 	rootCmd.Flags().IntSliceVarP(&config.PrimaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	rootCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
 
-	rootCmd.Flags().BoolVarP(&debug, "debug", "", false, "Debug mode")
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
 }
 
@@ -140,4 +139,9 @@ func newReadCloser(filename string) io.ReadCloser {
 	}
 
 	return file
+}
+
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	fmt.Fprintln(os.Stderr, fmt.Sprintf("%s took %s", name, elapsed))
 }
