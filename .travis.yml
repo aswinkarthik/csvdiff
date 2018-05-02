@@ -6,6 +6,7 @@ install:
 - curl https://glide.sh/get | sh
 - glide install
 script:
-- go test -v ./...
+- go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
 after_success:
+- curl -sL https://codecov.io/bash | bash
 - bash -l ./release.sh
