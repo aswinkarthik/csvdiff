@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/aswinkarthik93/csvdiff.svg?branch=master)](https://travis-ci.org/aswinkarthik93/csvdiff)
 [![Go Doc](https://godoc.org/github.com/aswinkarthik93/csvdiff?status.svg)](https://godoc.org/github.com/aswinkarthik93/csvdiff)
 [![Go Report Card](https://goreportcard.com/badge/github.com/aswinkarthik93/csvdiff)](https://goreportcard.com/report/github.com/aswinkarthik93/csvdiff)
+[![codecov](https://codecov.io/gh/aswinkarthik93/csvdiff/branch/master/graph/badge.svg)](https://codecov.io/gh/aswinkarthik93/csvdiff)
 [![Downloads](https://img.shields.io/github/downloads/aswinkarthik93/csvdiff/latest/total.svg)](https://github.com/aswinkarthik93/csvdiff/releases)
 [![Latest release](https://img.shields.io/github/release/aswinkarthik93/csvdiff.svg)](https://github.com/aswinkarthik93/csvdiff/releases)
 
