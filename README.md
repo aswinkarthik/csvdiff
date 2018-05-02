@@ -13,10 +13,10 @@ A Blazingly fast diff tool for comparing csv files.
 
 Csvdiff is a difftool to compute changes between two csv files.
 
-* It is not a traditional diff tool. It is most suitable for comparing csv files dumped from database tables. GNU diff tool is orders of magnitude faster on comparing line by line.
-* Supports specifying group of columns as primary-key.
-* Supports selective comparison of fields in a row.
-* Compares csvs of million records csv in under 2 seconds. Comparisons and benchmarks [here](/benchmark).
+- It is not a traditional diff tool. It is most suitable for comparing csv files dumped from database tables. GNU diff tool is orders of magnitude faster on comparing line by line.
+- Supports specifying group of columns as primary-key.
+- Supports selective comparison of fields in a row.
+- Compares csvs of million records csv in under 2 seconds. Comparisons and benchmarks [here](/benchmark).
 
 ## Demo
 
@@ -48,7 +48,7 @@ yum install https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/c
 
 - For debian
 
-```
+```bash
 curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_linux_64-bit.deb -O
 dpkg --install csvdiff_*_linux_64-bit.deb
 ```
@@ -63,7 +63,7 @@ curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvd
 
 - Build using Go
 
-```
+```bash
 go get -u github.com/aswinkarthik93/csvdiff
 ```
 
