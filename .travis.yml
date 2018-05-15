@@ -3,8 +3,8 @@ language: go
 go:
 - 1.10.x
 install:
-- curl https://glide.sh/get | sh
-- glide install
+- curl -sL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+- dep ensure
 script:
 - go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
 after_success:
