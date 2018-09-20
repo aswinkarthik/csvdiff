@@ -23,3 +23,6 @@ vendor/
 coverage.txt
 
 majestic_million*.csv
+
+# Output binary
+csvdiff

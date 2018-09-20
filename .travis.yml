@@ -1,12 +1,9 @@
 sudo: required
 language: go
 go:
-- 1.10.x
-install:
-- curl -sL https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-- dep ensure
+- 1.11
 script:
-- go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
+- env GO111MODULE=on go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
 after_success:
 - curl -sL https://codecov.io/bash | bash
 - bash -l ./release.sh
