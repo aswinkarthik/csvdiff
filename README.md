@@ -36,17 +36,15 @@ $ csvdiff base.csv delta.csv
 
 ### Using binaries
 
-Replace `vX.Y.Z` with the latest version in [releases page](https://github.com/aswinkarthik/csvdiff/releases)
-
 ```bash
 # binary will be $GOPATH/bin/csvdiff
-curl -sfL https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s -- -b $GOPATH/bin vX.Y.Z
+curl -sfL https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s -- -b $GOPATH/bin
 
 # or install it into ./bin/
-curl -sfL https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s vX.Y.Z
+curl -sfL https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s
 
 # In alpine linux (as it does not come with curl by default)
-wget -O - -q https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s vX.Y.Z
+wget -O - -q https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s
 ```
 
 ### Using source code
