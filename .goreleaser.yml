@@ -1,3 +1,10 @@
+project_name: csvdiff
+
+release:
+  github:
+    owner: aswinkarthik
+    name: csvdiff
+
 builds:
   - main: ./main.go
     binary: csvdiff

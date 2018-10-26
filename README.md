@@ -34,40 +34,28 @@ $ csvdiff base.csv delta.csv
 
 ## Installation
 
-- For MacOS
+### Using binaries
+
+Replace `vX.Y.Z` with the latest version in [releases page](https://github.com/aswinkarthik/csvdiff/releases)
 
 ```bash
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_darwin_amd64.tar.gz | tar xfz -
+# binary will be $GOPATH/bin/csvdiff
+curl -sfL https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s -- -b $GOPATH/bin vX.Y.Z
+
+# or install it into ./bin/
+curl -sfL https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s vX.Y.Z
+
+# In alpine linux (as it does not come with curl by default)
+wget -O - -q https://raw.githubusercontent.com/aswinkarthik93/csvdiff/master/install.sh | sh -s vX.Y.Z
 ```
 
-- For centos
-
-```bash
-yum install https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_linux_64-bit.rpm
-```
-
-- For debian
-
-```bash
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_linux_64-bit.deb -O
-dpkg --install csvdiff_*_linux_64-bit.deb
-```
-
-- For Linux
-
-```bash
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_linux_amd64.tar.gz | tar xfz -
-```
-
-- For [Windows](https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_windows_amd64.tar.gz)
-
-- Build using Go
+### Using source code
 
 ```bash
 go get -u github.com/aswinkarthik93/csvdiff
 ```
 
-## Usecase
+## Use case
 
 - Cases where you have a base database dump as csv. If you receive the changes as another database dump as csv, this tool can be used to figure out what are the additions and modifications to the original database dump. The `additions.csv` can be used to create an `insert.sql` and with the `modifications.csv` an `update.sql` data migration.
 - The delta file can either contain just the changes or the entire table dump along with the changes.
