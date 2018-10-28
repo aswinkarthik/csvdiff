@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aswinkarthik93/csvdiff/pkg/digest"
+	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/stretchr/testify/assert"
 )
 

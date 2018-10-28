@@ -3,8 +3,8 @@ package cmd_test
 import (
 	"testing"
 
-	"github.com/aswinkarthik93/csvdiff/cmd"
-	"github.com/aswinkarthik93/csvdiff/pkg/digest"
+	"github.com/aswinkarthik/csvdiff/cmd"
+	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/stretchr/testify/assert"
 )
 

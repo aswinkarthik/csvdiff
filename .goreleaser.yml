@@ -21,8 +21,8 @@ nfpm:
     386: 32-bit
     darwin: macOS
     linux: linux
-  homepage: https://github.com/aswinkarthik93/csvdiff
-  maintainer: aswinkarthik93
+  homepage: https://github.com/aswinkarthik/csvdiff
+  maintainer: aswinkarthik
   description: A Blazingly fast diff tool for comparing csv files.
   license: MIT
   formats:
