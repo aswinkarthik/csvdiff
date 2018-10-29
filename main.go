@@ -1,4 +1,4 @@
-// Copyright © 2018 aswinkarthik93
+// Copyright © 2018 aswinkarthik
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
 
 package main
 
-import "github.com/aswinkarthik93/csvdiff/cmd"
+import "github.com/aswinkarthik/csvdiff/cmd"
 
 func main() {
 	cmd.Execute()

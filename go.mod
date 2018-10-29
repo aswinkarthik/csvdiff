@@ -1,4 +1,4 @@
-module github.com/aswinkarthik93/csvdiff
+module github.com/aswinkarthik/csvdiff
 
 require (
 	github.com/BurntSushi/toml v0.3.0 // indirect

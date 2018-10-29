@@ -1,4 +1,4 @@
-// Copyright © 2018 aswinkarthik93
+// Copyright © 2018 aswinkarthik
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/aswinkarthik93/csvdiff/pkg/digest"
+	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

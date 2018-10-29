@@ -1,11 +1,11 @@
 # csvdiff
 
-[![Build Status](https://travis-ci.org/aswinkarthik93/csvdiff.svg?branch=master)](https://travis-ci.org/aswinkarthik93/csvdiff)
-[![Go Doc](https://godoc.org/github.com/aswinkarthik93/csvdiff?status.svg)](https://godoc.org/github.com/aswinkarthik93/csvdiff)
-[![Go Report Card](https://goreportcard.com/badge/github.com/aswinkarthik93/csvdiff)](https://goreportcard.com/report/github.com/aswinkarthik93/csvdiff)
-[![codecov](https://codecov.io/gh/aswinkarthik93/csvdiff/branch/master/graph/badge.svg)](https://codecov.io/gh/aswinkarthik93/csvdiff)
-[![Downloads](https://img.shields.io/github/downloads/aswinkarthik93/csvdiff/latest/total.svg)](https://github.com/aswinkarthik93/csvdiff/releases)
-[![Latest release](https://img.shields.io/github/release/aswinkarthik93/csvdiff.svg)](https://github.com/aswinkarthik93/csvdiff/releases)
+[![Build Status](https://travis-ci.org/aswinkarthik/csvdiff.svg?branch=master)](https://travis-ci.org/aswinkarthik/csvdiff)
+[![Go Doc](https://godoc.org/github.com/aswinkarthik/csvdiff?status.svg)](https://godoc.org/github.com/aswinkarthik/csvdiff)
+[![Go Report Card](https://goreportcard.com/badge/github.com/aswinkarthik/csvdiff)](https://goreportcard.com/report/github.com/aswinkarthik/csvdiff)
+[![codecov](https://codecov.io/gh/aswinkarthik/csvdiff/branch/master/graph/badge.svg)](https://codecov.io/gh/aswinkarthik/csvdiff)
+[![Downloads](https://img.shields.io/github/downloads/aswinkarthik/csvdiff/latest/total.svg)](https://github.com/aswinkarthik/csvdiff/releases)
+[![Latest release](https://img.shields.io/github/release/aswinkarthik/csvdiff.svg)](https://github.com/aswinkarthik/csvdiff/releases)
 
 A Blazingly fast diff tool for comparing csv files.
 
@@ -34,40 +34,26 @@ $ csvdiff base.csv delta.csv
 
 ## Installation
 
-- For MacOS
+### Using binaries
 
 ```bash
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_darwin_amd64.tar.gz | tar xfz -
+# binary will be $GOPATH/bin/csvdiff
+curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s -- -b $GOPATH/bin
+
+# or install it into ./bin/
+curl -sfL https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s
+
+# In alpine linux (as it does not come with curl by default)
+wget -O - -q https://raw.githubusercontent.com/aswinkarthik/csvdiff/master/install.sh | sh -s
 ```
 
-- For centos
+### Using source code
 
 ```bash
-yum install https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_linux_64-bit.rpm
+go get -u github.com/aswinkarthik/csvdiff
 ```
 
-- For debian
-
-```bash
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_linux_64-bit.deb -O
-dpkg --install csvdiff_*_linux_64-bit.deb
-```
-
-- For Linux
-
-```bash
-curl -sL https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_linux_amd64.tar.gz | tar xfz -
-```
-
-- For [Windows](https://github.com/aswinkarthik93/csvdiff/releases/download/v1.0.0/csvdiff_1.0.0_windows_amd64.tar.gz)
-
-- Build using Go
-
-```bash
-go get -u github.com/aswinkarthik93/csvdiff
-```
-
-## Usecase
+## Use case
 
 - Cases where you have a base database dump as csv. If you receive the changes as another database dump as csv, this tool can be used to figure out what are the additions and modifications to the original database dump. The `additions.csv` can be used to create an `insert.sql` and with the `modifications.csv` an `update.sql` data migration.
 - The delta file can either contain just the changes or the entire table dump along with the changes.
@@ -125,7 +111,7 @@ Rows:
 ## Build locally
 
 ```bash
-$ git clone https://github.com/aswinkarthik93/csvdiff
+$ git clone https://github.com/aswinkarthik/csvdiff
 $ go get ./...
 $ go build
 

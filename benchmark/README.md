@@ -67,7 +67,7 @@ sys	0m0.147s
 
 ## Go Benchmark Results
 
-Benchmark test can be found [here](https://github.com/aswinkarthik93/csvdiff/blob/master/pkg/digest/digest_benchmark_test.go).
+Benchmark test can be found [here](https://github.com/aswinkarthik/csvdiff/blob/master/pkg/digest/digest_benchmark_test.go).
 
 ```bash
 $ cd ./pkg/digest

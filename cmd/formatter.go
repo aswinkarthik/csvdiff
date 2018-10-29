@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/aswinkarthik93/csvdiff/pkg/digest"
+	"github.com/aswinkarthik/csvdiff/pkg/digest"
 )
 
 // Formatter defines the interface through which differences
