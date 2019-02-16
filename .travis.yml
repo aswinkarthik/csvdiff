@@ -1,14 +1,19 @@
-sudo: required
-
 language: go
 
+addons:
+  apt:
+    packages:
+      - rpm
+
 go:
-  - 1.11
+  - 1.x
 
 env:
   global:
     - GO111MODULE=on
     - GORELEASER_ON=1
+
+gobuild_args: -ldflags "-X main.version=${TRAVIS_TAG}"
 
 script:
   - go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
@@ -17,17 +22,7 @@ script:
 after_success:
   - curl -sL https://codecov.io/bash | bash
 
-before_deploy:
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-
 deploy:
-  - provider: script
-    script: bash -l docker-push.sh
-    skip_cleanup: true
-    on:
-      branch: master
-      repo: aswinkarthik/csvdiff
-      tags: true
   - provider: script
     script: curl -sL https://git.io/goreleaser | bash
     skip_cleanup: true
