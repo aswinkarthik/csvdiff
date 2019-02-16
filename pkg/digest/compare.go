@@ -2,6 +2,7 @@ package digest
 
 import (
 	"encoding/csv"
+	"fmt"
 	"runtime"
 	"strings"
 	"sync"
@@ -27,16 +28,22 @@ type diffMessage struct {
 }
 
 // Diff will differentiate between two given configs
-func Diff(baseConfig, deltaConfig *Config) Difference {
+func Diff(baseConfig, deltaConfig *Config) (Difference, error) {
 	maxProcs := runtime.NumCPU()
-	base := Create(baseConfig)
+	base, err := Create(baseConfig)
+
+	if err != nil {
+		return Difference{}, fmt.Errorf("error in base file: %v", err)
+	}
 
 	additions := make([]string, 0, len(base))
 	modifications := make([]string, 0, len(base))
 
 	messageChan := make(chan []diffMessage, bufferSize*maxProcs)
+	errorChannel := make(chan error)
+	defer close(errorChannel)
 
-	go readAndCompare(base, deltaConfig, messageChan)
+	go readAndCompare(base, deltaConfig, messageChan, errorChannel)
 
 	for msgs := range messageChan {
 		for _, msg := range msgs {
@@ -48,14 +55,26 @@ func Diff(baseConfig, deltaConfig *Config) Difference {
 		}
 	}
 
-	return Difference{Additions: additions, Modifications: modifications}
+	if err := <-errorChannel; err != nil {
+		return Difference{}, fmt.Errorf("error in delta file: %v", err)
+	}
+
+	return Difference{Additions: additions, Modifications: modifications}, nil
 }
 
-func readAndCompare(base map[uint64]uint64, config *Config, msgChannel chan<- []diffMessage) {
+func readAndCompare(base map[uint64]uint64, config *Config, msgChannel chan<- []diffMessage, errorChannel chan<- error) {
 	reader := csv.NewReader(config.Reader)
 	var wg sync.WaitGroup
 	for {
-		lines, eofReached := getNextNLines(reader)
+		lines, eofReached, err := getNextNLines(reader)
+
+		if err != nil {
+			wg.Wait()
+			close(msgChannel)
+			errorChannel <- err
+			return
+		}
+
 		wg.Add(1)
 		go compareDigestForNLines(base, lines, config, msgChannel, &wg)
 
@@ -65,6 +84,7 @@ func readAndCompare(base map[uint64]uint64, config *Config, msgChannel chan<- []
 	}
 	wg.Wait()
 	close(msgChannel)
+	errorChannel <- nil
 }
 
 func compareDigestForNLines(base map[uint64]uint64,

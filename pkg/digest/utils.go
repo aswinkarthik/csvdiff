@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-func getNextNLines(reader *csv.Reader) ([][]string, bool) {
+func getNextNLines(reader *csv.Reader) ([][]string, bool, error) {
 	lines := make([][]string, bufferSize)
 
 	lineCount := 0
@@ -18,9 +18,10 @@ func getNextNLines(reader *csv.Reader) ([][]string, bool) {
 				eofReached = true
 				break
 			}
-			panic(err)
+
+			return nil, true, err
 		}
 	}
 
-	return lines[:lineCount], eofReached
+	return lines[:lineCount], eofReached, nil
 }
