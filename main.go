@@ -22,6 +22,9 @@ package main
 
 import "github.com/aswinkarthik/csvdiff/cmd"
 
+var version string
+
 func main() {
+	cmd.SetVersion(version)
 	cmd.Execute()
 }
