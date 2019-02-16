@@ -27,9 +27,7 @@ import (
 	"time"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -70,8 +68,6 @@ Most suitable for csv files created from database tables`,
 
 		return nil
 	},
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 		// Print version and exit program
 		if version {
@@ -88,8 +84,18 @@ Most suitable for csv files created from database tables`,
 		deltaFile := newReadCloser(args[1])
 		defer deltaFile.Close()
 
-		baseConfig := digest.NewConfig(baseFile, config.GetPrimaryKeys(), config.GetValueColumns())
-		deltaConfig := digest.NewConfig(deltaFile, config.GetPrimaryKeys(), config.GetValueColumns())
+		baseConfig := digest.NewConfig(
+			baseFile,
+			config.GetPrimaryKeys(),
+			config.GetValueColumns(),
+			config.GetIncludeColumnPositions(),
+		)
+		deltaConfig := digest.NewConfig(
+			deltaFile,
+			config.GetPrimaryKeys(),
+			config.GetValueColumns(),
+			config.GetIncludeColumnPositions(),
+		)
 
 		diff, err := digest.Diff(baseConfig, deltaConfig)
 
@@ -126,55 +132,21 @@ func isValidFile(path string) error {
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.csvdiff.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	rootCmd.Flags().IntSliceVarP(&config.PrimaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	rootCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
+	rootCmd.Flags().IntSliceVarP(&config.IncludeColumnPositions, "include", "", []int{}, "Include positions in CSV to display Eg: 1,2. Default is entire row")
 	rootCmd.Flags().StringVarP(&config.Format, "format", "", "rowmark", "Available (rowmark|json)")
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
 	rootCmd.Flags().BoolVarP(&version, "version", "", false, "Display version")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".csvdiff" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".csvdiff")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
 }
 
 func newReadCloser(filename string) io.ReadCloser {
