@@ -1,6 +1,7 @@
 package digest_test
 
 import (
+	"encoding/csv"
 	"strings"
 	"testing"
 
@@ -32,25 +33,48 @@ func TestDigestForFile(t *testing.T) {
 	secondDigest := xxhash.Sum64String(secondLine)
 	saturdayDigest := xxhash.Sum64String("saturday")
 
-	testConfig := &digest.Config{
-		Reader: strings.NewReader(firstLine + "\n" + secondLine),
-		Key:    []int{0},
-	}
+	t.Run("should create digest for given key and all values", func(t *testing.T) {
+		testConfig := &digest.Config{
+			Reader: strings.NewReader(firstLine + "\n" + secondLine),
+			Key:    []int{0},
+		}
 
-	actualDigest := digest.Create(testConfig)
+		actualDigest, err := digest.Create(testConfig)
 
-	expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
+		expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
 
-	assert.Equal(t, expectedDigest, actualDigest)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedDigest, actualDigest)
+	})
 
-	testConfig = &digest.Config{
-		Reader: strings.NewReader(firstLine + "\n" + secondLine),
-		Key:    []int{0},
-		Value:  []int{3},
-	}
+	t.Run("should create digest for given key and given values", func(t *testing.T) {
+		testConfig := &digest.Config{
+			Reader: strings.NewReader(firstLine + "\n" + secondLine),
+			Key:    []int{0},
+			Value:  []int{3},
+		}
 
-	actualDigest = digest.Create(testConfig)
-	expectedDigest = map[uint64]uint64{firstKey: fridayDigest, secondKey: saturdayDigest}
+		actualDigest, err := digest.Create(testConfig)
+		expectedDigest := map[uint64]uint64{firstKey: fridayDigest, secondKey: saturdayDigest}
 
-	assert.Equal(t, expectedDigest, actualDigest)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedDigest, actualDigest)
+	})
+
+	t.Run("should return ParseError if csv reading fails", func(t *testing.T) {
+		testConfig := &digest.Config{
+			Reader: strings.NewReader(firstLine + "\n" + "some-random-line"),
+			Key:    []int{0},
+			Value:  []int{3},
+		}
+
+		actualDigest, err := digest.Create(testConfig)
+
+		assert.Error(t, err)
+
+		_, isParseError := err.(*csv.ParseError)
+
+		assert.True(t, isParseError)
+		assert.Nil(t, actualDigest)
+	})
 }

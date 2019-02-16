@@ -91,9 +91,16 @@ Most suitable for csv files created from database tables`,
 		baseConfig := digest.NewConfig(baseFile, config.GetPrimaryKeys(), config.GetValueColumns())
 		deltaConfig := digest.NewConfig(deltaFile, config.GetPrimaryKeys(), config.GetValueColumns())
 
-		diff := digest.Diff(baseConfig, deltaConfig)
+		diff, err := digest.Diff(baseConfig, deltaConfig)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "csvdiff failed: %v\n", err)
+			os.Exit(2)
+		}
 
 		config.Formatter().Format(diff, os.Stdout)
+
+		return
 	},
 }
 

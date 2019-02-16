@@ -43,8 +43,9 @@ func TestDiff(t *testing.T) {
 		},
 	}
 
-	actual := digest.Diff(baseConfig, deltaConfig)
+	actual, err := digest.Diff(baseConfig, deltaConfig)
 
+	assert.NoError(t, err)
 	assert.ElementsMatch(t, expected.Modifications, actual.Modifications)
 	assert.ElementsMatch(t, expected.Additions, actual.Additions)
 }
