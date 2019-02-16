@@ -34,6 +34,13 @@ $ csvdiff base.csv delta.csv
 
 ## Installation
 
+### Homebrew
+
+```bash
+brew tap thecasualcoder/stable
+brew install csvdiff
+```
+
 ### Using binaries
 
 ```bash
