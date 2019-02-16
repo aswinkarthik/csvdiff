@@ -33,7 +33,6 @@ import (
 var (
 	cfgFile string
 	timed   bool
-	version bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -43,11 +42,6 @@ var rootCmd = &cobra.Command{
 	Long: `Differentiates two csv files and finds out the additions and modifications.
 Most suitable for csv files created from database tables`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		// If its --version flag, dont thrown error
-		if version {
-			return nil
-		}
-
 		// Validate args
 		if len(args) != 2 {
 			return fmt.Errorf("Pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
@@ -69,12 +63,6 @@ Most suitable for csv files created from database tables`,
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// Print version and exit program
-		if version {
-			fmt.Println(VersionString)
-			return
-		}
-
 		if timed {
 			defer timeTrack(time.Now(), "csvdiff")
 		}
@@ -131,6 +119,7 @@ func isValidFile(path string) error {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	rootCmd.Version = Version()
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
@@ -146,7 +135,6 @@ func init() {
 	rootCmd.Flags().StringVarP(&config.Format, "format", "", "rowmark", "Available (rowmark|json)")
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
-	rootCmd.Flags().BoolVarP(&version, "version", "", false, "Display version")
 }
 
 func newReadCloser(filename string) io.ReadCloser {
