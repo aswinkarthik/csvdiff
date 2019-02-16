@@ -27,3 +27,19 @@ func TestPositionsMapValuesReturnsCompleteStringCsvIfEmpty(t *testing.T) {
 
 	assert.Equal(t, expected, actual)
 }
+
+func TestPosition_Contains(t *testing.T) {
+	positions := digest.Positions([]int{0, 3})
+
+	assert.True(t, positions.Contains(3))
+	assert.False(t, positions.Contains(4))
+}
+
+func TestPosition_Append(t *testing.T) {
+	positions := digest.Positions([]int{0, 3})
+	additionalPositions := digest.Positions([]int{4, 3})
+
+	positions = positions.Append(additionalPositions)
+
+	assert.ElementsMatch(t, []int{0, 3, 4}, []int(positions))
+}

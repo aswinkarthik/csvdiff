@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"runtime"
-	"strings"
 	"sync"
 )
 
@@ -100,17 +99,19 @@ func compareDigestForNLines(base map[uint64]uint64,
 		if baseValue, present := base[digest.Key]; present {
 			// Present in both base and delta
 			if baseValue != digest.Value {
+				value := config.Include.MapToValue(line)
 				// Modification
 				output[diffCounter] = diffMessage{
-					value: strings.Join(line, Separator),
+					value: value,
 					_type: modification,
 				}
 				diffCounter++
 			}
 		} else {
+			value := config.Include.MapToValue(line)
 			// Not present in base. So Addition.
 			output[diffCounter] = diffMessage{
-				value: strings.Join(line, Separator),
+				value: value,
 				_type: addition,
 			}
 			diffCounter++
