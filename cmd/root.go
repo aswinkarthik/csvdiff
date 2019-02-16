@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -53,7 +52,15 @@ Most suitable for csv files created from database tables`,
 
 		// Validate args
 		if len(args) != 2 {
-			return errors.New("Pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
+			return fmt.Errorf("Pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
+		}
+
+		if err := isValidFile(args[0]); err != nil {
+			return err
+		}
+
+		if err := isValidFile(args[1]); err != nil {
+			return err
 		}
 
 		// Validate flags
@@ -88,6 +95,24 @@ Most suitable for csv files created from database tables`,
 
 		config.Formatter().Format(diff, os.Stdout)
 	},
+}
+
+func isValidFile(path string) error {
+	fileInfo, err := os.Stat(path)
+
+	if os.IsNotExist(err) {
+		return fmt.Errorf("%s does not exist", path)
+	}
+
+	if fileInfo.IsDir() {
+		return fmt.Errorf("%s is a directory. Please pass a file", path)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading path: %v", err)
+	}
+
+	return nil
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
