@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
@@ -74,10 +75,16 @@ const (
 // based on config.Format
 func (c *Config) Formatter() Formatter {
 	format := strings.ToLower(c.Format)
-	if format == rowmark {
-		return &RowMarkFormatter{}
-	} else if format == jsonFormat {
-		return &JSONFormatter{}
+
+	switch format {
+	case jsonFormat:
+		return &JSONFormatter{
+			Stdout: os.Stdout,
+		}
+	default:
+		return &RowMarkFormatter{
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
+		}
 	}
-	return &RowMarkFormatter{}
 }

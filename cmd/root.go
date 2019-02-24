@@ -92,7 +92,7 @@ Most suitable for csv files created from database tables`,
 			os.Exit(2)
 		}
 
-		config.Formatter().Format(diff, os.Stdout)
+		config.Formatter().Format(diff)
 
 		return
 	},
