@@ -55,11 +55,12 @@ func TestDigestForFile(t *testing.T) {
 			Key:    []int{0},
 		}
 
-		actualDigest, err := digest.Create(testConfig)
+		actualDigest, sourceMap, err := digest.Create(testConfig)
 
 		expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
 
 		assert.NoError(t, err)
+		assert.Len(t, sourceMap, 0)
 		assert.Equal(t, expectedDigest, actualDigest)
 	})
 
@@ -70,7 +71,7 @@ func TestDigestForFile(t *testing.T) {
 			Value:  []int{3},
 		}
 
-		actualDigest, err := digest.Create(testConfig)
+		actualDigest, _, err := digest.Create(testConfig)
 		expectedDigest := map[uint64]uint64{firstKey: fridayDigest, secondKey: saturdayDigest}
 
 		assert.NoError(t, err)
@@ -84,7 +85,7 @@ func TestDigestForFile(t *testing.T) {
 			Value:  []int{3},
 		}
 
-		actualDigest, err := digest.Create(testConfig)
+		actualDigest, _, err := digest.Create(testConfig)
 
 		assert.Error(t, err)
 

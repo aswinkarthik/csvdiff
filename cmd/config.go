@@ -50,25 +50,21 @@ func (c *Config) GetIncludeColumnPositions() digest.Positions {
 // Validate validates the config object
 // and returns error if not valid.
 func (c *Config) Validate() error {
-	allFormats := []string{rowmark, jsonFormat}
+	allFormats := []string{rowmark, jsonFormat, diffFormat}
 
-	formatValid := false
 	for _, format := range allFormats {
 		if strings.ToLower(c.Format) == format {
-			formatValid = true
+			return nil
 		}
 	}
 
-	if !formatValid {
-		return errors.New("Specified format is not valid")
-	}
-
-	return nil
+	return errors.New("Specified format is not valid")
 }
 
 const (
 	rowmark    = "rowmark"
 	jsonFormat = "json"
+	diffFormat = "diff"
 )
 
 // Formatter instantiates a new formatted
