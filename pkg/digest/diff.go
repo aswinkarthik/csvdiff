@@ -29,7 +29,7 @@ type diffMessage struct {
 // Diff will differentiate between two given configs
 func Diff(baseConfig, deltaConfig *Config) (Difference, error) {
 	maxProcs := runtime.NumCPU()
-	base, err := Create(baseConfig)
+	base, _, err := Create(baseConfig)
 
 	if err != nil {
 		return Difference{}, fmt.Errorf("error in base file: %v", err)
