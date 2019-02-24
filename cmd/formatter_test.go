@@ -25,12 +25,13 @@ func TestJSONFormat(t *testing.T) {
   ]
 }`
 
-	var buffer bytes.Buffer
+	var stdout bytes.Buffer
 
-	formatter = &cmd.JSONFormatter{}
+	formatter = &cmd.JSONFormatter{Stdout: &stdout}
 
-	formatter.Format(diff, &buffer)
-	assert.Equal(t, expected, buffer.String())
+	err := formatter.Format(diff)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, stdout.String())
 }
 
 func TestRowMarkFormatter(t *testing.T) {
@@ -39,17 +40,22 @@ func TestRowMarkFormatter(t *testing.T) {
 		Additions:     []string{"additions"},
 		Modifications: []string{"modification"},
 	}
-	expected := `Additions 1
-Modifications 1
-Rows:
-additions,ADDED
+	expectedStdout := `additions,ADDED
 modification,MODIFIED
 `
+	expectedStderr := `Additions 1
+Modifications 1
+Rows:
+`
 
-	var buffer bytes.Buffer
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
 
-	formatter = &cmd.RowMarkFormatter{}
+	formatter = &cmd.RowMarkFormatter{Stdout: &stdout, Stderr: &stderr}
 
-	formatter.Format(diff, &buffer)
-	assert.Equal(t, expected, buffer.String())
+	err := formatter.Format(diff)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expectedStdout, stdout.String())
+	assert.Equal(t, expectedStderr, stderr.String())
 }
