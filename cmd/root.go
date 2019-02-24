@@ -134,7 +134,7 @@ func init() {
 	rootCmd.Flags().IntSliceVarP(&config.PrimaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	rootCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
 	rootCmd.Flags().IntSliceVarP(&config.IncludeColumnPositions, "include", "", []int{}, "Include positions in CSV to display Eg: 1,2. Default is entire row")
-	rootCmd.Flags().StringVarP(&config.Format, "format", "", "rowmark", "Available (rowmark|json)")
+	rootCmd.Flags().StringVarP(&config.Format, "format", "o", "rowmark", "Available (rowmark|json)")
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
 }
