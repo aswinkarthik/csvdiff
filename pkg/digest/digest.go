@@ -15,8 +15,9 @@ const Separator = ","
 // Digest represents the binding of the key of each csv line
 // and the digest that gets created for the entire line
 type Digest struct {
-	Key   uint64
-	Value uint64
+	Key    uint64
+	Value  uint64
+	Source []string
 }
 
 // CreateDigest creates a Digest for each line of csv.
@@ -26,7 +27,15 @@ func CreateDigest(csv []string, pKey Positions, pRow Positions) Digest {
 	digest := xxhash.Sum64String(pRow.MapToValue(csv))
 
 	return Digest{Key: key, Value: digest}
+}
 
+// CreateDigestWithSource creates a Digest for each line of csv.
+// There will be one Digest per line
+func CreateDigestWithSource(csv []string, pKey Positions, pRow Positions) Digest {
+	key := xxhash.Sum64String(pKey.MapToValue(csv))
+	digest := xxhash.Sum64String(pRow.MapToValue(csv))
+
+	return Digest{Key: key, Value: digest, Source: csv}
 }
 
 // Config represents configurations that can be passed
@@ -35,24 +44,33 @@ func CreateDigest(csv []string, pKey Positions, pRow Positions) Digest {
 // Key: The primary key positions
 // Value: The Value positions that needs to be compared for diff
 // Include: Include these positions in output. It is Value positions by default.
+// KeepSource: return the source and target string if diff is computed
 type Config struct {
-	Key     Positions
-	Value   Positions
-	Include Positions
-	Reader  io.Reader
+	Key        Positions
+	Value      Positions
+	Include    Positions
+	Reader     io.Reader
+	KeepSource bool
 }
 
 // NewConfig creates an instance of Config struct.
-func NewConfig(r io.Reader, primaryKey Positions, valueColumns Positions, includeColumns Positions) *Config {
+func NewConfig(
+	r io.Reader,
+	primaryKey Positions,
+	valueColumns Positions,
+	includeColumns Positions,
+	keepSource bool,
+) *Config {
 	if len(includeColumns) == 0 {
 		includeColumns = valueColumns
 	}
 
 	return &Config{
-		Reader:  r,
-		Key:     primaryKey,
-		Value:   valueColumns,
-		Include: includeColumns,
+		Reader:     r,
+		Key:        primaryKey,
+		Value:      valueColumns,
+		Include:    includeColumns,
+		KeepSource: keepSource,
 	}
 }
 
@@ -115,9 +133,16 @@ func createDigestForNLines(lines [][]string,
 	wg *sync.WaitGroup,
 ) {
 	output := make([]Digest, len(lines))
+	var createDigestFunc func(csv []string, pKey Positions, pRow Positions) Digest
+
+	if config.KeepSource {
+		createDigestFunc = CreateDigestWithSource
+	} else {
+		createDigestFunc = CreateDigest
+	}
 
 	for i, line := range lines {
-		output[i] = CreateDigest(line, config.Key, config.Value)
+		output[i] = createDigestFunc(line, config.Key, config.Value)
 	}
 
 	digestChannel <- output

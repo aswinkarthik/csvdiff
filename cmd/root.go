@@ -77,12 +77,14 @@ Most suitable for csv files created from database tables`,
 			config.GetPrimaryKeys(),
 			config.GetValueColumns(),
 			config.GetIncludeColumnPositions(),
+			false,
 		)
 		deltaConfig := digest.NewConfig(
 			deltaFile,
 			config.GetPrimaryKeys(),
 			config.GetValueColumns(),
 			config.GetIncludeColumnPositions(),
+			false,
 		)
 
 		diff, err := digest.Diff(baseConfig, deltaConfig)
