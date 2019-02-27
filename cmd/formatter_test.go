@@ -11,7 +11,6 @@ import (
 )
 
 func TestJSONFormat(t *testing.T) {
-	var formatter cmd.Formatter
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
 		Modifications: []digest.Modification{digest.Modification{Current: []string{"modification"}}},
@@ -26,8 +25,9 @@ func TestJSONFormat(t *testing.T) {
 }`
 
 	var stdout bytes.Buffer
+	var stderr bytes.Buffer
 
-	formatter = &cmd.JSONFormatter{Stdout: &stdout}
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "json"})
 
 	err := formatter.Format(diff)
 	assert.NoError(t, err)
@@ -35,7 +35,6 @@ func TestJSONFormat(t *testing.T) {
 }
 
 func TestRowMarkFormatter(t *testing.T) {
-	var formatter cmd.Formatter
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
 		Modifications: []digest.Modification{digest.Modification{Current: []string{"modification"}}},
@@ -51,7 +50,7 @@ Rows:
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter = &cmd.RowMarkFormatter{Stdout: &stdout, Stderr: &stderr}
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "rowmark"})
 
 	err := formatter.Format(diff)
 

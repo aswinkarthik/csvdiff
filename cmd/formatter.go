@@ -9,25 +9,81 @@ import (
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 )
 
-// Formatter defines the interface through which differences
-// can be formatted and displayed
-type Formatter interface {
-	Format(digest.Differences) error
+const (
+	rowmark    = "rowmark"
+	jsonFormat = "json"
+	diffFormat = "diff"
+)
+
+// Formatter can print the differences to stdout
+// and accompanying metadata to stderr
+type Formatter struct {
+	stdout io.Writer
+	stderr io.Writer
+	config Config
+}
+
+// NewFormatter can be used to create a new formatter
+func NewFormatter(stdout, stderr io.Writer, config Config) *Formatter {
+	return &Formatter{stdout: stdout, stderr: stderr, config: config}
+}
+
+// Format can be used to format the differences based on config
+// to appropriate writers
+func (f *Formatter) Format(diff digest.Differences) error {
+	switch f.config.Format {
+	case jsonFormat:
+		return f.json(diff)
+	case rowmark:
+		return f.rowMark(diff)
+	default:
+		return fmt.Errorf("formatter not found")
+	}
+}
+
+// JSONFormatter formats diff to as a JSON Object
+// { "Additions": [...], "Modifications": [...] }
+func (f *Formatter) json(diff digest.Differences) error {
+	// jsonDifference is a struct to represent legacy JSON format
+	type jsonDifference struct {
+		Additions     []string
+		Modifications []string
+	}
+
+	additions := make([]string, 0, len(diff.Additions))
+	for _, addition := range diff.Additions {
+		additions = append(additions, strings.Join(addition, ","))
+	}
+
+	modifications := make([]string, 0, len(diff.Modifications))
+	for _, modification := range diff.Modifications {
+		modifications = append(modifications, strings.Join(modification.Current, ","))
+	}
+
+	jsonDiff := jsonDifference{Additions: additions, Modifications: modifications}
+	data, err := json.MarshalIndent(jsonDiff, "", "  ")
+
+	if err != nil {
+		return fmt.Errorf("error when serializing with JSON formatter: %v", err)
+	}
+
+	_, err = f.stdout.Write(data)
+
+	if err != nil {
+		return fmt.Errorf("error when writing to writer with JSON formatter: %v", err)
+	}
+
+	return nil
 }
 
 // RowMarkFormatter formats diff by marking each row as
 // ADDED/MODIFIED. It mutates the row and adds as a new column.
-type RowMarkFormatter struct {
-	Stdout io.Writer
-	Stderr io.Writer
-}
+func (f *Formatter) rowMark(diff digest.Differences) error {
 
-// Format prints the diff to os.Stdout
-func (f *RowMarkFormatter) Format(diff digest.Differences) error {
-	fmt.Fprintf(f.Stderr, "Additions %d\n", len(diff.Additions))
-	fmt.Fprintf(f.Stderr, "Modifications %d\n", len(diff.Modifications))
-	fmt.Fprintf(f.Stderr, "Rows:\n")
-	
+	fmt.Fprintf(f.stderr, "Additions %d\n", len(diff.Additions))
+	fmt.Fprintf(f.stderr, "Modifications %d\n", len(diff.Modifications))
+	fmt.Fprintf(f.stderr, "Rows:\n")
+
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
 		additions = append(additions, strings.Join(addition, ","))
@@ -39,7 +95,7 @@ func (f *RowMarkFormatter) Format(diff digest.Differences) error {
 	}
 
 	for _, added := range additions {
-		_, err := fmt.Fprintf(f.Stdout, "%s,%s\n", added, "ADDED")
+		_, err := fmt.Fprintf(f.stdout, "%s,%s\n", added, "ADDED")
 
 		if err != nil {
 			return fmt.Errorf("error when formatting additions with RowMark formatter: %v", err)
@@ -47,51 +103,12 @@ func (f *RowMarkFormatter) Format(diff digest.Differences) error {
 	}
 
 	for _, modified := range modifications {
-		_, err := fmt.Fprintf(f.Stdout, "%s,%s\n", modified, "MODIFIED")
+		_, err := fmt.Fprintf(f.stdout, "%s,%s\n", modified, "MODIFIED")
 
 		if err != nil {
 			return fmt.Errorf("error when formatting modifications with RowMark formatter: %v", err)
 		}
 
-	}
-
-	return nil
-}
-
-// JSONFormatter formats diff to as a JSON Object
-type JSONFormatter struct {
-	Stdout io.Writer
-}
-
-// JSONDifference is a struct to represent legacy JSON format
-type JSONDifference struct {
-	Additions     []string
-	Modifications []string
-}
-
-// Format prints the diff as a JSON
-func (f *JSONFormatter) Format(diff digest.Differences) error {
-	additions := make([]string, 0, len(diff.Additions))
-	for _, addition := range diff.Additions {
-		additions = append(additions, strings.Join(addition, ","))
-	}
-
-	modifications := make([]string, 0, len(diff.Modifications))
-	for _, modification := range diff.Modifications {
-		modifications = append(modifications, strings.Join(modification.Current, ","))
-	}
-
-	jsonDiff := JSONDifference{Additions: additions, Modifications: modifications}
-	data, err := json.MarshalIndent(jsonDiff, "", "  ")
-
-	if err != nil {
-		return fmt.Errorf("error when serializing with JSON formatter: %v", err)
-	}
-
-	_, err = f.Stdout.Write(data)
-
-	if err != nil {
-		return fmt.Errorf("error when writing to writer with JSON formatter: %v", err)
 	}
 
 	return nil
