@@ -49,7 +49,6 @@ func (c *Config) GetIncludeColumnPositions() digest.Positions {
 // Validate validates the config object
 // and returns error if not valid.
 func (c *Config) Validate() error {
-	allFormats := []string{rowmark, jsonFormat, diffFormat}
 
 	for _, format := range allFormats {
 		if strings.ToLower(c.Format) == format {

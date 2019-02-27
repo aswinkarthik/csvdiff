@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
@@ -77,7 +78,7 @@ Most suitable for csv files created from database tables`,
 			config.GetPrimaryKeys(),
 			config.GetValueColumns(),
 			config.GetIncludeColumnPositions(),
-			false,
+			true,
 		)
 		deltaConfig := digest.NewConfig(
 			deltaFile,
@@ -137,7 +138,7 @@ func init() {
 	rootCmd.Flags().IntSliceVarP(&config.PrimaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	rootCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
 	rootCmd.Flags().IntSliceVarP(&config.IncludeColumnPositions, "include", "", []int{}, "Include positions in CSV to display Eg: 1,2. Default is entire row")
-	rootCmd.Flags().StringVarP(&config.Format, "format", "o", "rowmark", "Available (rowmark|json|diff)")
+	rootCmd.Flags().StringVarP(&config.Format, "format", "o", "rowmark", fmt.Sprintf("Available (%s)", strings.Join(allFormats, "|")))
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
 }
