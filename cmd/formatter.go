@@ -4,15 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
+	"github.com/fatih/color"
 )
 
 const (
 	rowmark    = "rowmark"
 	jsonFormat = "json"
-	diffFormat = "diff"
+	lineDiff   = "diff"
+	wordDiff   = "word-diff"
 )
+
+var allFormats = []string{rowmark, jsonFormat, lineDiff, wordDiff}
 
 // Formatter can print the differences to stdout
 // and accompanying metadata to stderr
@@ -35,6 +40,10 @@ func (f *Formatter) Format(diff digest.Differences) error {
 		return f.json(diff)
 	case rowmark:
 		return f.rowMark(diff)
+	case lineDiff:
+		return f.lineDiff(diff)
+	case wordDiff:
+		return f.wordDiff(diff)
 	default:
 		return fmt.Errorf("formatter not found")
 	}
@@ -112,6 +121,58 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 			return fmt.Errorf("error when formatting modifications with RowMark formatter: %v", err)
 		}
 
+	}
+
+	return nil
+}
+
+// lineDiff is git-style line diff
+func (f *Formatter) lineDiff(diff digest.Differences) error {
+	includes := config.GetIncludeColumnPositions()
+
+	white := color.New(color.FgWhite).FprintfFunc()
+	red := color.New(color.FgRed).FprintfFunc()
+	green := color.New(color.FgGreen).FprintfFunc()
+
+	white(f.stderr, "# Additions (%d)\n", len(diff.Additions))
+	for _, addition := range diff.Additions {
+		green(f.stdout, "+ %s\n", includes.MapToValue(addition))
+	}
+	white(f.stderr, "# Modifications (%d)\n", len(diff.Modifications))
+	for _, modification := range diff.Modifications {
+		red(f.stdout, "- %s\n", includes.MapToValue(modification.Original))
+		green(f.stdout, "+ %s\n", includes.MapToValue(modification.Current))
+	}
+
+	return nil
+}
+
+// wordDiff is git-style word diff
+func (f *Formatter) wordDiff(diff digest.Differences) error {
+	includes := config.GetIncludeColumnPositions()
+	if len(includes) <= 0 {
+		includes = config.GetValueColumns()
+	}
+
+	red := color.New(color.FgRed).SprintfFunc()
+	green := color.New(color.FgGreen).SprintfFunc()
+
+	for _, addition := range diff.Additions {
+		fmt.Fprintln(f.stdout, green("{+%s+}", includes.MapToValue(addition)))
+	}
+
+	for _, modification := range diff.Modifications {
+		result := make([]string, 0, len(modification.Current))
+		for i := 0; i < len(includes) || i < len(modification.Current); i++ {
+			if modification.Original[i] != modification.Current[i] {
+				removed := red("[-%s-]", modification.Original[i])
+				added := green("{+%s+}", modification.Current[i])
+				result = append(result, fmt.Sprintf("%s%s", removed, added))
+			} else {
+				result = append(result, modification.Current[i])
+			}
+		}
+		fmt.Fprintln(f.stdout, strings.Join(result, digest.Separator))
 	}
 
 	return nil
