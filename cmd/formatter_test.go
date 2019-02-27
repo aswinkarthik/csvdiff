@@ -12,9 +12,9 @@ import (
 
 func TestJSONFormat(t *testing.T) {
 	var formatter cmd.Formatter
-	diff := digest.Difference{
-		Additions:     []string{"additions"},
-		Modifications: []string{"modification"},
+	diff := digest.Differences{
+		Additions:     []digest.Addition{[]string{"additions"}},
+		Modifications: []digest.Modification{digest.Modification{Current: []string{"modification"}}},
 	}
 	expected := `{
   "Additions": [
@@ -36,9 +36,9 @@ func TestJSONFormat(t *testing.T) {
 
 func TestRowMarkFormatter(t *testing.T) {
 	var formatter cmd.Formatter
-	diff := digest.Difference{
-		Additions:     []string{"additions"},
-		Modifications: []string{"modification"},
+	diff := digest.Differences{
+		Additions:     []digest.Addition{[]string{"additions"}},
+		Modifications: []digest.Modification{digest.Modification{Current: []string{"modification"}}},
 	}
 	expectedStdout := `additions,ADDED
 modification,MODIFIED

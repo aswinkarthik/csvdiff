@@ -24,8 +24,9 @@ func TestDiff(t *testing.T) {
 
 	t.Run("default config", func(t *testing.T) {
 		baseConfig := &digest.Config{
-			Reader: strings.NewReader(base),
-			Key:    []int{0},
+			Reader:     strings.NewReader(base),
+			Key:        []int{0},
+			KeepSource: true,
 		}
 
 		deltaConfig := &digest.Config{
@@ -33,29 +34,34 @@ func TestDiff(t *testing.T) {
 			Key:    []int{0},
 		}
 
-		expected := digest.Difference{
-			Additions: []string{
-				"4,col-1,col-2,col-3,four-value-added",
-				"5,col-1,col-2,col-3,five-value-added",
+		expected := digest.Differences{
+			Additions: []digest.Addition{
+				strings.Split("4,col-1,col-2,col-3,four-value-added", ","),
+				strings.Split("5,col-1,col-2,col-3,five-value-added", ","),
 			},
-			Modifications: []string{
-				"2,col-1,col-2,col-3,two-value-modified",
-				"100,col-1-modified,col-2,col-3,hundred-value-modified",
+			Modifications: []digest.Modification{
+				{
+					Current:  strings.Split("2,col-1,col-2,col-3,two-value-modified", ","),
+					Original: strings.Split("2,col-1,col-2,col-3,two-value", ","),
+				},
+				{
+					Current:  strings.Split("100,col-1-modified,col-2,col-3,hundred-value-modified", ","),
+					Original: strings.Split("100,col-1,col-2,col-3,hundred-value", ","),
+				},
 			},
 		}
 
-		actual, err := digest.Diff(baseConfig, deltaConfig)
-
+		actual, err := digest.Diff(*baseConfig, *deltaConfig)
 		assert.NoError(t, err)
-		assert.ElementsMatch(t, expected.Modifications, actual.Modifications)
-		assert.ElementsMatch(t, expected.Additions, actual.Additions)
+		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("selective values columns", func(t *testing.T) {
+	t.Run("selective values columns without keeping source", func(t *testing.T) {
 		baseConfig := &digest.Config{
-			Reader: strings.NewReader(base),
-			Key:    []int{0},
-			Value:  []int{1},
+			Reader:     strings.NewReader(base),
+			Key:        []int{0},
+			Value:      []int{1},
+			KeepSource: false,
 		}
 
 		deltaConfig := &digest.Config{
@@ -64,51 +70,20 @@ func TestDiff(t *testing.T) {
 			Value:  []int{1},
 		}
 
-		expected := digest.Difference{
-			Additions: []string{
-				"4,col-1,col-2,col-3,four-value-added",
-				"5,col-1,col-2,col-3,five-value-added",
+		expected := digest.Differences{
+			Additions: []digest.Addition{
+				strings.Split("4,col-1,col-2,col-3,four-value-added", ","),
+				strings.Split("5,col-1,col-2,col-3,five-value-added", ","),
 			},
-			Modifications: []string{
-				"100,col-1-modified,col-2,col-3,hundred-value-modified",
+			Modifications: []digest.Modification{
+				{
+					Current: strings.Split("100,col-1-modified,col-2,col-3,hundred-value-modified", ","),
+				},
 			},
 		}
 
-		actual, err := digest.Diff(baseConfig, deltaConfig)
-
+		actual, err := digest.Diff(*baseConfig, *deltaConfig)
 		assert.NoError(t, err)
-		assert.ElementsMatch(t, expected.Modifications, actual.Modifications)
-		assert.ElementsMatch(t, expected.Additions, actual.Additions)
-	})
-
-	t.Run("selective include columns", func(t *testing.T) {
-		baseConfig := &digest.Config{
-			Reader:  strings.NewReader(base),
-			Key:     []int{0},
-			Include: []int{0},
-		}
-
-		deltaConfig := &digest.Config{
-			Reader:  strings.NewReader(delta),
-			Key:     []int{0},
-			Include: []int{0},
-		}
-
-		expected := digest.Difference{
-			Additions: []string{
-				"4",
-				"5",
-			},
-			Modifications: []string{
-				"2",
-				"100",
-			},
-		}
-
-		actual, err := digest.Diff(baseConfig, deltaConfig)
-
-		assert.NoError(t, err)
-		assert.ElementsMatch(t, expected.Modifications, actual.Modifications)
-		assert.ElementsMatch(t, expected.Additions, actual.Additions)
+		assert.Equal(t, expected, actual)
 	})
 }

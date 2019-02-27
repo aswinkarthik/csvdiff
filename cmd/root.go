@@ -87,7 +87,7 @@ Most suitable for csv files created from database tables`,
 			false,
 		)
 
-		diff, err := digest.Diff(baseConfig, deltaConfig)
+		diff, err := digest.Diff(*baseConfig, *deltaConfig)
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "csvdiff failed: %v\n", err)
