@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 )
@@ -50,14 +49,16 @@ func (f *Formatter) json(diff digest.Differences) error {
 		Modifications []string
 	}
 
+	includes := config.GetIncludeColumnPositions()
+
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
-		additions = append(additions, strings.Join(addition, ","))
+		additions = append(additions, includes.MapToValue(addition))
 	}
 
 	modifications := make([]string, 0, len(diff.Modifications))
 	for _, modification := range diff.Modifications {
-		modifications = append(modifications, strings.Join(modification.Current, ","))
+		modifications = append(modifications, includes.MapToValue(modification.Current))
 	}
 
 	jsonDiff := jsonDifference{Additions: additions, Modifications: modifications}
@@ -84,14 +85,16 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 	fmt.Fprintf(f.stderr, "Modifications %d\n", len(diff.Modifications))
 	fmt.Fprintf(f.stderr, "Rows:\n")
 
+	includes := config.GetIncludeColumnPositions()
+
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
-		additions = append(additions, strings.Join(addition, ","))
+		additions = append(additions, includes.MapToValue(addition))
 	}
 
 	modifications := make([]string, 0, len(diff.Modifications))
 	for _, modification := range diff.Modifications {
-		modifications = append(modifications, strings.Join(modification.Current, ","))
+		modifications = append(modifications, includes.MapToValue(modification.Current))
 	}
 
 	for _, added := range additions {
