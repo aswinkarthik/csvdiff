@@ -45,28 +45,3 @@ func TestConfigValidate(t *testing.T) {
 	config = &cmd.Config{Format: "json"}
 	assert.NoError(t, config.Validate())
 }
-
-func TestDefaultConfigFormatter(t *testing.T) {
-	config := &cmd.Config{}
-
-	formatter, ok := config.Formatter().(*cmd.RowMarkFormatter)
-
-	assert.True(t, ok)
-	assert.NotNil(t, formatter)
-}
-
-func TestConfigFormatter(t *testing.T) {
-	var config *cmd.Config
-	var formatter cmd.Formatter
-	var ok bool
-
-	config = &cmd.Config{Format: "rowmark"}
-	formatter, ok = config.Formatter().(*cmd.RowMarkFormatter)
-	assert.True(t, ok)
-	assert.NotNil(t, formatter)
-
-	config = &cmd.Config{Format: "json"}
-	formatter, ok = config.Formatter().(*cmd.JSONFormatter)
-	assert.True(t, ok)
-	assert.NotNil(t, formatter)
-}

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"os"
 	"strings"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
@@ -59,28 +58,4 @@ func (c *Config) Validate() error {
 	}
 
 	return errors.New("Specified format is not valid")
-}
-
-const (
-	rowmark    = "rowmark"
-	jsonFormat = "json"
-	diffFormat = "diff"
-)
-
-// Formatter instantiates a new formatted
-// based on config.Format
-func (c *Config) Formatter() Formatter {
-	format := strings.ToLower(c.Format)
-
-	switch format {
-	case jsonFormat:
-		return &JSONFormatter{
-			Stdout: os.Stdout,
-		}
-	default:
-		return &RowMarkFormatter{
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-		}
-	}
 }

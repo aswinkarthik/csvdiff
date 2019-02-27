@@ -94,7 +94,10 @@ Most suitable for csv files created from database tables`,
 			os.Exit(2)
 		}
 
-		config.Formatter().Format(diff)
+		if err := NewFormatter(os.Stdout, os.Stderr, config).Format(diff); err != nil {
+			fmt.Fprintf(os.Stderr, "csvdiff failed: %v\n", err)
+			os.Exit(3)
+		}
 
 		return
 	},
