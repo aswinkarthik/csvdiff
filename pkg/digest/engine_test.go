@@ -28,15 +28,19 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 		}
 
 		engine := digest.NewEngine(conf)
-		defer engine.Close()
 
-		fd, err := engine.GenerateFileDigest()
+		dChan, eChan := engine.StreamDigests()
 
+		err := <-eChan
 		assert.NoError(t, err)
 
-		expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
+		actualDigest := digestsFrom(dChan)
+		expectedDigest := []digest.Digest{
+			{Key: firstKey, Value: firstDigest},
+			{Key: secondKey, Value: secondDigest},
+		}
 
-		assert.Equal(t, expectedDigest, fd.Digests)
+		assert.ElementsMatch(t, expectedDigest, actualDigest)
 	})
 
 	t.Run("should create digest skeeping source", func(t *testing.T) {
@@ -47,20 +51,19 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 		}
 
 		engine := digest.NewEngine(conf)
-		defer engine.Close()
 
-		fd, err := engine.GenerateFileDigest()
+		dChan, eChan := engine.StreamDigests()
 
+		err := <-eChan
 		assert.NoError(t, err)
 
-		expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
-		expectedSourceMap := map[uint64][]string{
-			firstKey:  strings.Split(firstLine, ","),
-			secondKey: strings.Split(secondLine, ","),
+		actualDigest := digestsFrom(dChan)
+		expectedDigest := []digest.Digest{
+			{Key: firstKey, Value: firstDigest, Source: strings.Split(firstLine, ",")},
+			{Key: secondKey, Value: secondDigest, Source: strings.Split(secondLine, ",")},
 		}
 
-		assert.Equal(t, expectedDigest, fd.Digests)
-		assert.Equal(t, expectedSourceMap, fd.SourceMap)
+		assert.ElementsMatch(t, expectedDigest, actualDigest)
 	})
 
 	t.Run("should create digest for given key and given values", func(t *testing.T) {
@@ -71,14 +74,19 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 		}
 
 		engine := digest.NewEngine(conf)
-		defer engine.Close()
 
-		fd, err := engine.GenerateFileDigest()
+		dChan, eChan := engine.StreamDigests()
 
-		expectedDigest := map[uint64]uint64{firstKey: fridayDigest, secondKey: saturdayDigest}
-
+		err := <-eChan
 		assert.NoError(t, err)
-		assert.Equal(t, expectedDigest, fd.Digests)
+
+		actualDigest := digestsFrom(dChan)
+		expectedDigest := []digest.Digest{
+			{Key: firstKey, Value: fridayDigest},
+			{Key: secondKey, Value: saturdayDigest},
+		}
+
+		assert.ElementsMatch(t, expectedDigest, actualDigest)
 	})
 
 	t.Run("should return ParseError if csv reading fails", func(t *testing.T) {
@@ -89,15 +97,30 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 		}
 
 		engine := digest.NewEngine(conf)
-		defer engine.Close()
 
-		fd, err := engine.GenerateFileDigest()
+		dChan, eChan := engine.StreamDigests()
+
+		err := <-eChan
 
 		assert.Error(t, err)
 
 		_, isParseError := err.(*csv.ParseError)
 
 		assert.True(t, isParseError)
-		assert.Nil(t, fd)
+
+		actualDigest := digestsFrom(dChan)
+		assert.Empty(t, actualDigest)
 	})
+}
+
+func digestsFrom(digestChan chan []digest.Digest) []digest.Digest {
+	result := make([]digest.Digest, 0, 10)
+
+	for rcvd := range digestChan {
+		for _, d := range rcvd {
+			result = append(result, d)
+		}
+	}
+
+	return result
 }

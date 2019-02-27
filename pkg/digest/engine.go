@@ -8,30 +8,17 @@ import (
 
 // Engine to create a FileDigest
 type Engine struct {
-	config        Config
-	reader        *csv.Reader
-	lock          *sync.Mutex
-	digestChannel chan []Digest
-	errorChannel  chan error
+	config Config
+	reader *csv.Reader
+	lock   *sync.Mutex
 }
 
 // NewEngine instantiates an engine
 func NewEngine(config Config) *Engine {
-	maxProcs := runtime.NumCPU()
-	digestChannel := make(chan []Digest, bufferSize*maxProcs)
-	errorChannel := make(chan error)
-
 	return &Engine{
-		config:        config,
-		lock:          &sync.Mutex{},
-		digestChannel: digestChannel,
-		errorChannel:  errorChannel,
+		config: config,
+		lock:   &sync.Mutex{},
 	}
-}
-
-// Close the engine after use
-func (e Engine) Close() {
-	close(e.errorChannel)
 }
 
 // GenerateFileDigest generates FileDigest with thread safety
@@ -49,47 +36,68 @@ func (e Engine) GenerateFileDigest() (*FileDigest, error) {
 		appendFunc = fd.AppendWithoutSource
 	}
 
-	go e.createDigestsInBackground()
+	digestChannel, errorChannel := e.StreamDigests()
 
-	for digests := range e.digestChannel {
+	for digests := range digestChannel {
 		for _, digest := range digests {
 			appendFunc(digest)
 		}
 	}
 
-	if err := <-e.errorChannel; err != nil {
+	if err := <-errorChannel; err != nil {
 		return nil, err
 	}
 
 	return fd, nil
 }
 
-func (e Engine) createDigestsInBackground() {
-	wg := &sync.WaitGroup{}
-	reader := csv.NewReader(e.config.Reader)
+// StreamDigests starts creating digests in the background
+// Returns 2 buffered channels, a digestChannel and an errorChannel
+//
+// digestChannel has all digests
+// errorChannel has any errors created during processing
+//
+// If there are any errors while processing csv, all existing go routines
+// to creates digests are waited to be closed and the digestChannel is closed at the end.
+// Only after that an error is created on the errorChannel.
+func (e Engine) StreamDigests() (chan []Digest, chan error) {
+	maxProcs := runtime.NumCPU()
+	digestChannel := make(chan []Digest, bufferSize*maxProcs)
+	errorChannel := make(chan error, 1)
 
-	for {
-		lines, eofReached, err := getNextNLines(reader)
-		if err != nil {
-			wg.Wait()
-			close(e.digestChannel)
-			e.errorChannel <- err
-			return
+	go func(digestChannel chan []Digest, errorChannel chan error) {
+		wg := &sync.WaitGroup{}
+		reader := csv.NewReader(e.config.Reader)
+
+		for {
+			lines, eofReached, err := getNextNLines(reader)
+
+			if err != nil {
+				wg.Wait()
+				close(digestChannel)
+				errorChannel <- err
+				close(errorChannel)
+				return
+			}
+
+			wg.Add(1)
+			go e.digestForLines(lines, digestChannel, wg)
+
+			if eofReached {
+				break
+			}
 		}
+		wg.Wait()
+		close(digestChannel)
+		errorChannel <- nil
+		close(errorChannel)
+	}(digestChannel, errorChannel)
 
-		wg.Add(1)
-		go e.digestForLines(lines, wg)
+	return digestChannel, errorChannel
 
-		if eofReached {
-			break
-		}
-	}
-	wg.Wait()
-	close(e.digestChannel)
-	e.errorChannel <- nil
 }
 
-func (e Engine) digestForLines(lines [][]string, wg *sync.WaitGroup) {
+func (e Engine) digestForLines(lines [][]string, digestChannel chan []Digest, wg *sync.WaitGroup) {
 	output := make([]Digest, 0, len(lines))
 	var createDigestFunc func(csv []string, pKey Positions, pRow Positions) Digest
 	config := e.config
@@ -104,6 +112,6 @@ func (e Engine) digestForLines(lines [][]string, wg *sync.WaitGroup) {
 		output = append(output, createDigestFunc(line, config.Key, config.Value))
 	}
 
-	e.digestChannel <- output
+	digestChannel <- output
 	wg.Done()
 }
