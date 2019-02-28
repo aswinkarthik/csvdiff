@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestJSONFormat(t *testing.T) {
+func TestLegacyJSONFormat(t *testing.T) {
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
 		Modifications: []digest.Modification{digest.Modification{Current: []string{"modification"}}},
@@ -27,13 +27,39 @@ func TestJSONFormat(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "json"})
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "legacy-json"})
 
 	err := formatter.Format(diff)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, stdout.String())
 }
 
+func TestJSONFormat(t *testing.T) {
+	diff := digest.Differences{
+		Additions:     []digest.Addition{[]string{"additions"}},
+		Modifications: []digest.Modification{digest.Modification{Original: []string{"original"}, Current: []string{"modification"}}},
+	}
+	expected := `{
+  "Additions": [
+    "additions"
+  ],
+  "Modifications": [
+    {
+      "Original": "original",
+      "Current": "modification"
+    }
+  ]
+}`
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "json"})
+
+	err := formatter.Format(diff)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, stdout.String())
+}
 func TestRowMarkFormatter(t *testing.T) {
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
