@@ -11,14 +11,15 @@ import (
 )
 
 const (
-	rowmark    = "rowmark"
-	jsonFormat = "json"
-	lineDiff   = "diff"
-	wordDiff   = "word-diff"
-	colorWords = "color-words"
+	rowmark          = "rowmark"
+	jsonFormat       = "json"
+	legacyJSONFormat = "legacy-json"
+	lineDiff         = "diff"
+	wordDiff         = "word-diff"
+	colorWords       = "color-words"
 )
 
-var allFormats = []string{rowmark, jsonFormat, lineDiff, wordDiff, colorWords}
+var allFormats = []string{rowmark, jsonFormat, legacyJSONFormat, lineDiff, wordDiff, colorWords}
 
 // Formatter can print the differences to stdout
 // and accompanying metadata to stderr
@@ -37,6 +38,8 @@ func NewFormatter(stdout, stderr io.Writer, config Config) *Formatter {
 // to appropriate writers
 func (f *Formatter) Format(diff digest.Differences) error {
 	switch f.config.Format {
+	case legacyJSONFormat:
+		return f.legacyJSON(diff)
 	case jsonFormat:
 		return f.json(diff)
 	case rowmark:
@@ -54,7 +57,7 @@ func (f *Formatter) Format(diff digest.Differences) error {
 
 // JSONFormatter formats diff to as a JSON Object
 // { "Additions": [...], "Modifications": [...] }
-func (f *Formatter) json(diff digest.Differences) error {
+func (f *Formatter) legacyJSON(diff digest.Differences) error {
 	// jsonDifference is a struct to represent legacy JSON format
 	type jsonDifference struct {
 		Additions     []string
@@ -75,6 +78,47 @@ func (f *Formatter) json(diff digest.Differences) error {
 
 	jsonDiff := jsonDifference{Additions: additions, Modifications: modifications}
 	data, err := json.MarshalIndent(jsonDiff, "", "  ")
+
+	if err != nil {
+		return fmt.Errorf("error when serializing with JSON formatter: %v", err)
+	}
+
+	_, err = f.stdout.Write(data)
+
+	if err != nil {
+		return fmt.Errorf("error when writing to writer with JSON formatter: %v", err)
+	}
+
+	return nil
+}
+
+// JSONFormatter formats diff to as a JSON Object
+// { "Additions": [...], "Modifications": [{ "Original": [...], "Current": [...]}]}
+func (f *Formatter) json(diff digest.Differences) error {
+	includes := config.GetIncludeColumnPositions()
+
+	additions := make([]string, 0, len(diff.Additions))
+	for _, addition := range diff.Additions {
+		additions = append(additions, includes.MapToValue(addition))
+	}
+
+	type modification struct {
+		Original string
+		Current  string
+	}
+
+	type jsonDifference struct {
+		Additions     []string
+		Modifications []modification
+	}
+
+	modifications := make([]modification, 0, len(diff.Modifications))
+	for _, mods := range diff.Modifications {
+		m := modification{Original: includes.MapToValue(mods.Original), Current: includes.MapToValue(mods.Current)}
+		modifications = append(modifications, m)
+	}
+
+	data, err := json.MarshalIndent(jsonDifference{Additions: additions, Modifications: modifications}, "", "  ")
 
 	if err != nil {
 		return fmt.Errorf("error when serializing with JSON formatter: %v", err)
