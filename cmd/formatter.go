@@ -15,9 +15,10 @@ const (
 	jsonFormat = "json"
 	lineDiff   = "diff"
 	wordDiff   = "word-diff"
+	colorWords = "color-words"
 )
 
-var allFormats = []string{rowmark, jsonFormat, lineDiff, wordDiff}
+var allFormats = []string{rowmark, jsonFormat, lineDiff, wordDiff, colorWords}
 
 // Formatter can print the differences to stdout
 // and accompanying metadata to stderr
@@ -44,6 +45,8 @@ func (f *Formatter) Format(diff digest.Differences) error {
 		return f.lineDiff(diff)
 	case wordDiff:
 		return f.wordDiff(diff)
+	case colorWords:
+		return f.colorWords(diff)
 	default:
 		return fmt.Errorf("formatter not found")
 	}
@@ -89,7 +92,6 @@ func (f *Formatter) json(diff digest.Differences) error {
 // RowMarkFormatter formats diff by marking each row as
 // ADDED/MODIFIED. It mutates the row and adds as a new column.
 func (f *Formatter) rowMark(diff digest.Differences) error {
-
 	fmt.Fprintf(f.stderr, "Additions %d\n", len(diff.Additions))
 	fmt.Fprintf(f.stderr, "Modifications %d\n", len(diff.Modifications))
 	fmt.Fprintf(f.stderr, "Rows:\n")
@@ -107,20 +109,11 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 	}
 
 	for _, added := range additions {
-		_, err := fmt.Fprintf(f.stdout, "%s,%s\n", added, "ADDED")
-
-		if err != nil {
-			return fmt.Errorf("error when formatting additions with RowMark formatter: %v", err)
-		}
+		fmt.Fprintf(f.stdout, "%s,%s\n", added, "ADDED")
 	}
 
 	for _, modified := range modifications {
-		_, err := fmt.Fprintf(f.stdout, "%s,%s\n", modified, "MODIFIED")
-
-		if err != nil {
-			return fmt.Errorf("error when formatting modifications with RowMark formatter: %v", err)
-		}
-
+		fmt.Fprintf(f.stdout, "%s,%s\n", modified, "MODIFIED")
 	}
 
 	return nil
@@ -130,15 +123,15 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 func (f *Formatter) lineDiff(diff digest.Differences) error {
 	includes := config.GetIncludeColumnPositions()
 
-	white := color.New(color.FgWhite).FprintfFunc()
+	blue := color.New(color.FgBlue).FprintfFunc()
 	red := color.New(color.FgRed).FprintfFunc()
 	green := color.New(color.FgGreen).FprintfFunc()
 
-	white(f.stderr, "# Additions (%d)\n", len(diff.Additions))
+	blue(f.stderr, "# Additions (%d)\n", len(diff.Additions))
 	for _, addition := range diff.Additions {
 		green(f.stdout, "+ %s\n", includes.MapToValue(addition))
 	}
-	white(f.stderr, "# Modifications (%d)\n", len(diff.Modifications))
+	blue(f.stderr, "# Modifications (%d)\n", len(diff.Modifications))
 	for _, modification := range diff.Modifications {
 		red(f.stdout, "- %s\n", includes.MapToValue(modification.Original))
 		green(f.stdout, "+ %s\n", includes.MapToValue(modification.Current))
@@ -147,26 +140,37 @@ func (f *Formatter) lineDiff(diff digest.Differences) error {
 	return nil
 }
 
-// wordDiff is git-style word diff
+// wordDiff is git-style --word-diff
 func (f *Formatter) wordDiff(diff digest.Differences) error {
+	return f.wordLevelDiffs(diff, "[-%s-]", "{+%s+}")
+}
+
+// colorWords is git-style --color-words
+func (f *Formatter) colorWords(diff digest.Differences) error {
+	return f.wordLevelDiffs(diff, "%s", "%s")
+}
+
+func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, additionFormat string) error {
 	includes := config.GetIncludeColumnPositions()
 	if len(includes) <= 0 {
 		includes = config.GetValueColumns()
 	}
-
+	blue := color.New(color.FgBlue).SprintfFunc()
 	red := color.New(color.FgRed).SprintfFunc()
 	green := color.New(color.FgGreen).SprintfFunc()
 
+	fmt.Fprintln(f.stderr, blue("# Additions (%d)", len(diff.Additions)))
 	for _, addition := range diff.Additions {
-		fmt.Fprintln(f.stdout, green("{+%s+}", includes.MapToValue(addition)))
+		fmt.Fprintln(f.stdout, green(additionFormat, includes.MapToValue(addition)))
 	}
 
+	fmt.Fprintln(f.stderr, blue("# Modifications (%d)", len(diff.Modifications)))
 	for _, modification := range diff.Modifications {
 		result := make([]string, 0, len(modification.Current))
 		for i := 0; i < len(includes) || i < len(modification.Current); i++ {
 			if modification.Original[i] != modification.Current[i] {
-				removed := red("[-%s-]", modification.Original[i])
-				added := green("{+%s+}", modification.Current[i])
+				removed := red(deletionFormat, modification.Original[i])
+				added := green(additionFormat, modification.Current[i])
 				result = append(result, fmt.Sprintf("%s%s", removed, added))
 			} else {
 				result = append(result, modification.Current[i])
@@ -176,4 +180,5 @@ func (f *Formatter) wordDiff(diff digest.Differences) error {
 	}
 
 	return nil
+
 }
