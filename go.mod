@@ -2,7 +2,6 @@ module github.com/aswinkarthik/csvdiff
 
 require (
 	github.com/OneOfOne/xxhash v1.2.2 // indirect
-	github.com/blang/semver v3.5.1+incompatible
 	github.com/cespare/xxhash v1.0.0
 	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/fatih/color v1.7.0
