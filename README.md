@@ -4,32 +4,54 @@
 [![Go Doc](https://godoc.org/github.com/aswinkarthik/csvdiff?status.svg)](https://godoc.org/github.com/aswinkarthik/csvdiff)
 [![Go Report Card](https://goreportcard.com/badge/github.com/aswinkarthik/csvdiff)](https://goreportcard.com/report/github.com/aswinkarthik/csvdiff)
 [![codecov](https://codecov.io/gh/aswinkarthik/csvdiff/branch/master/graph/badge.svg)](https://codecov.io/gh/aswinkarthik/csvdiff)
-[![Downloads](https://img.shields.io/github/downloads/aswinkarthik/csvdiff/latest/total.svg)](https://github.com/aswinkarthik/csvdiff/releases)
+[![Downloads](https://img.shields.io/github/downloads/aswinkarthik/csvdiff/total.svg)](https://github.com/aswinkarthik/csvdiff/releases)
 [![Latest release](https://img.shields.io/github/release/aswinkarthik/csvdiff.svg)](https://github.com/aswinkarthik/csvdiff/releases)
 
-A Blazingly fast diff tool for comparing csv files.
+A fast diff tool for comparing csv files.
 
 ## What is csvdiff?
 
 Csvdiff is a difftool to compute changes between two csv files.
 
-- It is not a traditional diff tool. It is most suitable for comparing csv files dumped from database tables. GNU diff tool is orders of magnitude faster on comparing line by line.
+- It is not a traditional diff tool. It is **most suitable** for comparing csv files dumped from **database tables**. GNU diff tool is orders of magnitude faster on comparing line by line.
 - Supports specifying group of columns as primary-key.
 - Supports selective comparison of fields in a row.
-- Compares csvs of million records csv in under 2 seconds. Comparisons and benchmarks [here](/benchmark).
+- Compares csvs of million records csv in under 2 seconds.
+
+## Why?
+
+I wanted to compare if the rows of a table before and after a given time and see what is the new changes that came in. Also, I wanted to selectively compare columns ignoring columns like `created_at` and `updated_at`. All I had was just the dumped csv files.
 
 ## Demo
 
-![demo](/demo/csvdiff.gif)
+[![asciicast](https://asciinema.org/a/MxhlSEZ1OAnHJA3tOrhMjcdgC.svg)](https://asciinema.org/a/MxhlSEZ1OAnHJA3tOrhMjcdgC?speed=3&autoplay=1&size=medium&rows=20&cols=150)
 
 ## Usage
 
-```bash
+```diff
 $ csvdiff base.csv delta.csv
-# Additions: 1
-# Modifications: 20
-# Rows:
-...
+# Additions (1)
++ 24564,907,completely-newsite.com,com,19827,32902,completely-newsite.com,com,1621,909,19787,32822
+# Modifications (1)
+- 69,48,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491
++ 69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491
+
+```
+
+
+```bash
+Usage:
+  csvdiff <base-csv> <delta-csv> [flags]
+
+Flags:
+      --columns ints       Selectively compare positions in CSV Eg: 1,2. Default is entire row
+  -o, --format string      Available (rowmark|json|legacy-json|diff|word-diff|color-words) (default "diff")
+  -h, --help               help for csvdiff
+      --include ints       Include positions in CSV to display Eg: 1,2. Default is entire row
+  -p, --primary-key ints   Primary key positions of the Input CSV as comma separated values Eg: 1,2 (default [0])
+      --time               Measure time
+  -t, --toggle             Help message for toggle
+      --version            version for csvdiff
 ```
 
 ## Installation
@@ -76,18 +98,18 @@ go get -u github.com/aswinkarthik/csvdiff
 - Non comma separators
 - Cannot be used as a generic difftool. Requires a column to be used as a primary key from the csv.
 
+## Formats
+
+There are a number of formats supported
+
+- `diff`: Git's diff style
+- `word-diff`: Git's --word-diff style 
+- `color-words`: Git's --color-words style
+- `json`: JSON serialization of result
+- `legacy-json`: JSON serialization of result in old format
+- `rowmark`: Marks each row with ADDED or MODIFIED status.
+
 ## Miscellaneous features
-
-- By default, it marks the row as ADDED or MODIFIED by introducing a new column at last.
-
-```bash
-% csvdiff examples/base-small.csv examples/delta-small.csv
-Additions 1
-Modifications 1
-Rows:
-24564,907,completely-newsite.com,com,19827,32902,completely-newsite.com,com,1621,909,19787,32822,ADDED
-69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491,MODIFIED
-```
 
 - The `--primary-key` in an integer array. Specify comma separated positions if the table has a compound key. Using this primary key, it can figure out modifications. If the primary key changes, it is an addition.
 
@@ -104,14 +126,15 @@ Rows:
 - Supports JSON format for post processing
 
 ```bash
-% csvdiff examples/base-small.csv examples/delta-small.csv --format json
+% csvdiff examples/base-small.csv examples/delta-small.csv --format json | jq '.'
 {
   "Additions": [
     "24564,907,completely-newsite.com,com,19827,32902,completely-newsite.com,com,1621,909,19787,32822"
   ],
-  "Modifications": [
-    "69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491"
-  ]
+  "Modifications": [{
+    "Original": "69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491",
+    "Current":  "69,1049,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491"
+  }]
 }
 ```
 
