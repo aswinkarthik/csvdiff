@@ -24,7 +24,7 @@ I wanted to compare if the rows of a table before and after a given time and see
 
 ## Demo
 
-[![asciicast](https://asciinema.org/a/MxhlSEZ1OAnHJA3tOrhMjcdgC.svg)](https://asciinema.org/a/MxhlSEZ1OAnHJA3tOrhMjcdgC?speed=3&autoplay=1&size=medium&rows=20&cols=150)
+[![asciicast](https://asciinema.org/a/MxhlSEZ1OAnHJA3tOrhMjcdgC.svg)](https://asciinema.org/a/MxhlSEZ1OAnHJA3tOrhMjcdgC?speed=2&autoplay=1&size=medium&rows=20&cols=150)
 
 ## Usage
 
