@@ -22,8 +22,8 @@ type Digest struct {
 // CreateDigest creates a Digest for each line of csv.
 // There will be one Digest per line
 func CreateDigest(csv []string, pKey Positions, pRow Positions) Digest {
-	key := xxhash.Sum64String(pKey.MapToValue(csv))
-	digest := xxhash.Sum64String(pRow.MapToValue(csv))
+	key := xxhash.Sum64String(pKey.Join(csv))
+	digest := xxhash.Sum64String(pRow.Join(csv))
 
 	return Digest{Key: key, Value: digest}
 }
@@ -31,8 +31,8 @@ func CreateDigest(csv []string, pKey Positions, pRow Positions) Digest {
 // CreateDigestWithSource creates a Digest for each line of csv.
 // There will be one Digest per line
 func CreateDigestWithSource(csv []string, pKey Positions, pRow Positions) Digest {
-	key := xxhash.Sum64String(pKey.MapToValue(csv))
-	digest := xxhash.Sum64String(pRow.MapToValue(csv))
+	key := xxhash.Sum64String(pKey.Join(csv))
+	digest := xxhash.Sum64String(pRow.Join(csv))
 
 	return Digest{Key: key, Value: digest, Source: csv}
 }

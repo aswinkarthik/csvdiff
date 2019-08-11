@@ -1,16 +1,17 @@
 package digest
 
 import (
+	csvlib "encoding/csv"
 	"strings"
 )
 
 // Positions represents positions of columns in a CSV array.
 type Positions []int
 
-// MapToValue plucks the values from CSV from
+// Join plucks the values from CSV from
 // their respective positions and concatenates
 // them using Separator as a string.
-func (p Positions) MapToValue(csv []string) string {
+func (p Positions) Join(csv []string) string {
 	if len(p) == 0 {
 		return strings.Join(csv, Separator)
 	}
@@ -22,6 +23,25 @@ func (p Positions) MapToValue(csv []string) string {
 	}
 	csvStr.WriteString(csv[p[len(p)-1]])
 	return csvStr.String()
+}
+
+// String method converts to csv mapping to positions
+// escapes necessary characters
+func (p Positions) String(csv []string) string {
+	selectiveCsv := csv
+	if len(p) != 0 {
+		selectiveCsv = make([]string, 0, len(p))
+		for _, pos := range p {
+			selectiveCsv = append(selectiveCsv, csv[pos])
+		}
+	}
+
+	csvStr := strings.Builder{}
+	w := csvlib.NewWriter(&csvStr)
+	_ = w.Write(selectiveCsv)
+	w.Flush()
+	csvWithNewLine := csvStr.String()
+	return csvWithNewLine[:len(csvWithNewLine)-1]
 }
 
 // Append additional positions to existing positions.

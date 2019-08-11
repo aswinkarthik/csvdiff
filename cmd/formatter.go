@@ -3,11 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"strings"
-
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/fatih/color"
+	"io"
 )
 
 const (
@@ -68,12 +66,12 @@ func (f *Formatter) legacyJSON(diff digest.Differences) error {
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
-		additions = append(additions, includes.MapToValue(addition))
+		additions = append(additions, includes.String(addition))
 	}
 
 	modifications := make([]string, 0, len(diff.Modifications))
 	for _, modification := range diff.Modifications {
-		modifications = append(modifications, includes.MapToValue(modification.Current))
+		modifications = append(modifications, includes.String(modification.Current))
 	}
 
 	jsonDiff := jsonDifference{Additions: additions, Modifications: modifications}
@@ -99,7 +97,7 @@ func (f *Formatter) json(diff digest.Differences) error {
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
-		additions = append(additions, includes.MapToValue(addition))
+		additions = append(additions, includes.String(addition))
 	}
 
 	type modification struct {
@@ -114,7 +112,7 @@ func (f *Formatter) json(diff digest.Differences) error {
 
 	modifications := make([]modification, 0, len(diff.Modifications))
 	for _, mods := range diff.Modifications {
-		m := modification{Original: includes.MapToValue(mods.Original), Current: includes.MapToValue(mods.Current)}
+		m := modification{Original: includes.String(mods.Original), Current: includes.String(mods.Current)}
 		modifications = append(modifications, m)
 	}
 
@@ -136,28 +134,28 @@ func (f *Formatter) json(diff digest.Differences) error {
 // RowMarkFormatter formats diff by marking each row as
 // ADDED/MODIFIED. It mutates the row and adds as a new column.
 func (f *Formatter) rowMark(diff digest.Differences) error {
-	fmt.Fprintf(f.stderr, "Additions %d\n", len(diff.Additions))
-	fmt.Fprintf(f.stderr, "Modifications %d\n", len(diff.Modifications))
-	fmt.Fprintf(f.stderr, "Rows:\n")
+	_, _ = fmt.Fprintf(f.stderr, "Additions %d\n", len(diff.Additions))
+	_, _ = fmt.Fprintf(f.stderr, "Modifications %d\n", len(diff.Modifications))
+	_, _ = fmt.Fprintf(f.stderr, "Rows:\n")
 
 	includes := config.GetIncludeColumnPositions()
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
-		additions = append(additions, includes.MapToValue(addition))
+		additions = append(additions, includes.String(addition))
 	}
 
 	modifications := make([]string, 0, len(diff.Modifications))
 	for _, modification := range diff.Modifications {
-		modifications = append(modifications, includes.MapToValue(modification.Current))
+		modifications = append(modifications, includes.String(modification.Current))
 	}
 
 	for _, added := range additions {
-		fmt.Fprintf(f.stdout, "%s,%s\n", added, "ADDED")
+		_, _ = fmt.Fprintf(f.stdout, "%s,%s\n", added, "ADDED")
 	}
 
 	for _, modified := range modifications {
-		fmt.Fprintf(f.stdout, "%s,%s\n", modified, "MODIFIED")
+		_, _ = fmt.Fprintf(f.stdout, "%s,%s\n", modified, "MODIFIED")
 	}
 
 	return nil
@@ -173,12 +171,12 @@ func (f *Formatter) lineDiff(diff digest.Differences) error {
 
 	blue(f.stderr, "# Additions (%d)\n", len(diff.Additions))
 	for _, addition := range diff.Additions {
-		green(f.stdout, "+ %s\n", includes.MapToValue(addition))
+		green(f.stdout, "+ %s\n", includes.String(addition))
 	}
 	blue(f.stderr, "# Modifications (%d)\n", len(diff.Modifications))
 	for _, modification := range diff.Modifications {
-		red(f.stdout, "- %s\n", includes.MapToValue(modification.Original))
-		green(f.stdout, "+ %s\n", includes.MapToValue(modification.Current))
+		red(f.stdout, "- %s\n", includes.String(modification.Original))
+		green(f.stdout, "+ %s\n", includes.String(modification.Current))
 	}
 
 	return nil
@@ -203,12 +201,12 @@ func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, addi
 	red := color.New(color.FgRed).SprintfFunc()
 	green := color.New(color.FgGreen).SprintfFunc()
 
-	fmt.Fprintln(f.stderr, blue("# Additions (%d)", len(diff.Additions)))
+	_, _ = fmt.Fprintln(f.stderr, blue("# Additions (%d)", len(diff.Additions)))
 	for _, addition := range diff.Additions {
-		fmt.Fprintln(f.stdout, green(additionFormat, includes.MapToValue(addition)))
+		_, _ = fmt.Fprintln(f.stdout, green(additionFormat, includes.String(addition)))
 	}
 
-	fmt.Fprintln(f.stderr, blue("# Modifications (%d)", len(diff.Modifications)))
+	_, _ = fmt.Fprintln(f.stderr, blue("# Modifications (%d)", len(diff.Modifications)))
 	for _, modification := range diff.Modifications {
 		result := make([]string, 0, len(modification.Current))
 		for i := 0; i < len(includes) || i < len(modification.Current); i++ {
@@ -220,7 +218,7 @@ func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, addi
 				result = append(result, modification.Current[i])
 			}
 		}
-		fmt.Fprintln(f.stdout, strings.Join(result, digest.Separator))
+		_, _ = fmt.Fprintln(f.stdout, digest.Positions{}.String(result))
 	}
 
 	return nil

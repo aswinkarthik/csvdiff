@@ -8,24 +8,68 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPositionsMapValues(t *testing.T) {
-	positions := digest.Positions([]int{0, 3})
-	csv := []string{"zero", "one", "two", "three"}
+func TestPositions_MapValues(t *testing.T) {
+	t.Run("should map positions to string", func(t *testing.T) {
+		positions := digest.Positions([]int{0, 3})
+		csv := []string{"zero", "one", "two", "three"}
 
-	actual := positions.MapToValue(csv)
-	expected := "zero,three"
+		actual := positions.Join(csv)
+		expected := "zero,three"
 
-	assert.Equal(t, expected, actual)
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("should map all positions to string if positions is empty", func(t *testing.T) {
+		positions := digest.Positions([]int{})
+		csv := []string{"zero", "one", "two", "three"}
+
+		actual := positions.Join(csv)
+		expected := strings.Join(csv, digest.Separator)
+
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("should not escape comma but retain new line if it is part of csv when mapping to values", func(t *testing.T) {
+		positions := digest.Positions([]int{0, 3})
+		csv := []string{"zero\n", "one", "two", "three,3"}
+
+		actual := positions.Join(csv)
+		expected := "zero\n,three,3"
+
+		assert.Equal(t, expected, actual)
+	})
 }
 
-func TestPositionsMapValuesReturnsCompleteStringCsvIfEmpty(t *testing.T) {
-	positions := digest.Positions([]int{})
-	csv := []string{"zero", "one", "two", "three"}
+func TestPositions_String(t *testing.T) {
+	t.Run("should map positions to string", func(t *testing.T) {
+		positions := digest.Positions([]int{0, 3})
+		csv := []string{"zero", "one", "two", "three"}
 
-	actual := positions.MapToValue(csv)
-	expected := strings.Join(csv, digest.Separator)
+		actual := positions.String(csv)
+		expected := "zero,three"
 
-	assert.Equal(t, expected, actual)
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("should map all positions to string if positions is empty", func(t *testing.T) {
+		positions := digest.Positions([]int{})
+		csv := []string{"zero", "one", "two", "three"}
+
+		actual := positions.String(csv)
+		expected := strings.Join(csv, digest.Separator)
+
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("should escape comma or new line if it is part of csv when mapping to values", func(t *testing.T) {
+		positions := digest.Positions([]int{0, 3})
+		csv := []string{"zero\n", "one", "two", "three,3"}
+
+		actual := positions.String(csv)
+		expected := "\"zero\n\",\"three,3\""
+
+		assert.Equal(t, expected, actual)
+	})
 }
 
 func TestPosition_Contains(t *testing.T) {
