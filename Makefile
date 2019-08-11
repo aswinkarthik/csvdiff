@@ -19,6 +19,13 @@ MAKEFLAGS += --silent
 ## install: Install missing dependencies. Runs `go get` internally. e.g; make install get=github.com/foo/bar
 install: go-get
 
+## lint: Lint the codebase using golangci-lint
+lint:
+ifeq (,$(wildcard ./out/golangci-lint))
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOBIN)
+endif
+	$(GOBIN)/golangci-lint  run -v ./...
+
 ## test: Run all tests
 test:
 	@-$(MAKE) -s go-test
@@ -57,7 +64,7 @@ go-vendor:
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go mod vendor
 
 go-test:
-	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go test -v ./...
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
 
 richgo-test:
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) richgo test -v ./...

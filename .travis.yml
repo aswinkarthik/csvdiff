@@ -16,7 +16,7 @@ env:
 gobuild_args: -ldflags "-X main.version=${TRAVIS_TAG}"
 
 script:
-  - go test -race -coverprofile=coverage.txt -covermode=atomic -v ./...
+  - make lint test
   - GOOS=linux go build
 
 after_success:
