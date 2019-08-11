@@ -87,12 +87,17 @@ Rows:
 
 func TestLineDiff(t *testing.T) {
 	diff := digest.Differences{
-		Additions:     []digest.Addition{[]string{"additions"}},
-		Modifications: []digest.Modification{digest.Modification{Original: []string{"original"}, Current: []string{"modification"}}},
+		Additions: []digest.Addition{[]string{"additions"}},
+		Modifications: []digest.Modification{
+			digest.Modification{
+				Original: []string{"original", "comma,separated,value"},
+				Current:  []string{"modification", "comma,separated,value-2"},
+			},
+		},
 	}
 	expectedStdout := `+ additions
-- original
-+ modification
+- original,"comma,separated,value"
++ modification,"comma,separated,value-2"
 `
 	expectedStderr := `# Additions (1)
 # Modifications (1)
