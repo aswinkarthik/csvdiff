@@ -116,10 +116,8 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 func digestsFrom(digestChan chan []digest.Digest) []digest.Digest {
 	result := make([]digest.Digest, 0, 10)
 
-	for rcvd := range digestChan {
-		for _, d := range rcvd {
-			result = append(result, d)
-		}
+	for d := range digestChan {
+		result = append(result, d...)
 	}
 
 	return result

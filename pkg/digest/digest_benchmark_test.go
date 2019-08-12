@@ -35,12 +35,7 @@ func CreateDigestFor(count int, b *testing.B) {
 	}
 
 	b.StartTimer()
-	Create(config)
-}
-
-type Csv struct {
-	counter int
-	limit   int
+	_, _, _ = Create(config)
 }
 
 type Reader struct {
@@ -54,8 +49,5 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 	}
 	toRead := fmt.Sprintf("%d,%s\n", r.counter, SomeText)
 	r.counter++
-	for i, b := range []byte(toRead) {
-		p[i] = b
-	}
-	return len(toRead), nil
+	return copy(p, toRead), nil
 }

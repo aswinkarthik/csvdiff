@@ -9,7 +9,6 @@ import (
 // Engine to create a FileDigest
 type Engine struct {
 	config Config
-	reader *csv.Reader
 	lock   *sync.Mutex
 }
 
