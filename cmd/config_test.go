@@ -31,9 +31,7 @@ func TestValueColumnPositions(t *testing.T) {
 }
 
 func TestConfigValidate(t *testing.T) {
-	var config *cmd.Config
-
-	config = &cmd.Config{}
+	config := &cmd.Config{}
 	assert.Error(t, config.Validate())
 
 	config = &cmd.Config{Format: "rowmark"}
