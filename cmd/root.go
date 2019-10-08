@@ -66,26 +66,10 @@ Most suitable for csv files created from database tables`,
 			defer timeTrack(time.Now(), "csvdiff")
 		}
 		fs := afero.NewOsFs()
-
 		baseFilename := args[0]
 		deltaFilename := args[1]
 
-		baseFile, err := newReadCloser(baseFilename)
-		if err != nil {
-			return fmt.Errorf("error opening base-file %s: %v", baseFilename, err)
-		}
-
-		deltaFile, err := newReadCloser(deltaFilename)
-		if err != nil {
-			return fmt.Errorf("error opening delta-file %s: %v", deltaFilename, err)
-		}
-
-		defer func() {
-			_ = baseFile.Close()
-			_ = deltaFile.Close()
-		}()
-
-		config := Config{
+		ctx := Context{
 			IncludeColumnPositions: includeColumnPositions,
 			Format:                 format,
 			PrimaryKeyPositions:    primaryKeyPositions,
@@ -94,30 +78,27 @@ Most suitable for csv files created from database tables`,
 			DeltaFilename:          deltaFilename,
 		}
 
-		if err := config.Validate(fs); err != nil {
+		if err := ctx.Validate(fs); err != nil {
 			return err
 		}
 
-		baseConfig := digest.NewConfig(
-			baseFile,
-			primaryKeyPositions,
-			valueColumnPositions,
-			includeColumnPositions,
-		)
-		deltaConfig := digest.NewConfig(
-			deltaFile,
-			primaryKeyPositions,
-			valueColumnPositions,
-			includeColumnPositions,
-		)
+		baseConfig, err := ctx.BaseDigestConfig(fs)
+		if err != nil {
+			return fmt.Errorf("error opening base-file %s: %v", baseFilename, err)
+		}
+		deltaConfig, err := ctx.DeltaDigestConfig(fs)
+		if err != nil {
+			return fmt.Errorf("error opening delta-file %s: %v", deltaFilename, err)
+		}
+		defer ctx.Close()
 
-		diff, err := digest.Diff(*baseConfig, *deltaConfig)
+		diff, err := digest.Diff(baseConfig, deltaConfig)
 
 		if err != nil {
 			return err
 		}
 
-		return NewFormatter(os.Stdout, os.Stderr, config).Format(diff)
+		return NewFormatter(os.Stdout, os.Stderr, ctx).Format(diff)
 	},
 }
 

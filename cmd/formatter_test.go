@@ -31,7 +31,7 @@ func TestLegacyJSONFormat(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "legacy-json"})
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "legacy-json"})
 
 	err := formatter.Format(diff)
 	assert.NoError(t, err)
@@ -62,7 +62,7 @@ func TestJSONFormat(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "json"})
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "json"})
 
 	err := formatter.Format(diff)
 	assert.NoError(t, err)
@@ -87,7 +87,7 @@ Rows:
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "rowmark"})
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "rowmark"})
 
 	err := formatter.Format(diff)
 
@@ -120,7 +120,7 @@ func TestLineDiff(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "diff"})
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "diff"})
 
 	err := formatter.Format(diff)
 
@@ -148,7 +148,7 @@ func TestWordDiff(t *testing.T) {
 		var stdout bytes.Buffer
 		var stderr bytes.Buffer
 
-		formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "word-diff"})
+		formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "word-diff"})
 
 		err := formatter.Format(diff)
 
@@ -177,7 +177,7 @@ func TestWordDiff(t *testing.T) {
 		var stdout bytes.Buffer
 		var stderr bytes.Buffer
 
-		formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{
+		formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{
 			Format:                 "word-diff",
 			IncludeColumnPositions: digest.Positions{0},
 		})
@@ -209,7 +209,7 @@ deletions
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "color-words"})
+	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "color-words"})
 
 	err := formatter.Format(diff)
 
@@ -220,7 +220,7 @@ deletions
 
 func TestWrongFormatter(t *testing.T) {
 	diff := digest.Differences{}
-	formatter := cmd.NewFormatter(nil, nil, cmd.Config{Format: "random-str"})
+	formatter := cmd.NewFormatter(nil, nil, cmd.Context{Format: "random-str"})
 
 	err := formatter.Format(diff)
 
