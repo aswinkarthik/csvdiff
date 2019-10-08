@@ -24,9 +24,8 @@ func TestDiff(t *testing.T) {
 
 	t.Run("default config", func(t *testing.T) {
 		baseConfig := &digest.Config{
-			Reader:     strings.NewReader(base),
-			Key:        []int{0},
-			KeepSource: true,
+			Reader: strings.NewReader(base),
+			Key:    []int{0},
 		}
 
 		deltaConfig := &digest.Config{
@@ -49,36 +48,8 @@ func TestDiff(t *testing.T) {
 					Original: strings.Split("100,col-1,col-2,col-3,hundred-value", ","),
 				},
 			},
-		}
-
-		actual, err := digest.Diff(*baseConfig, *deltaConfig)
-		assert.NoError(t, err)
-		assert.Equal(t, expected, actual)
-	})
-
-	t.Run("selective values columns without keeping source", func(t *testing.T) {
-		baseConfig := &digest.Config{
-			Reader:     strings.NewReader(base),
-			Key:        []int{0},
-			Value:      []int{1},
-			KeepSource: false,
-		}
-
-		deltaConfig := &digest.Config{
-			Reader: strings.NewReader(delta),
-			Key:    []int{0},
-			Value:  []int{1},
-		}
-
-		expected := digest.Differences{
-			Additions: []digest.Addition{
-				strings.Split("4,col-1,col-2,col-3,four-value-added", ","),
-				strings.Split("5,col-1,col-2,col-3,five-value-added", ","),
-			},
-			Modifications: []digest.Modification{
-				{
-					Current: strings.Split("100,col-1-modified,col-2,col-3,hundred-value-modified", ","),
-				},
+			Deletions: []digest.Deletion{
+				strings.Split("3,col-1,col-2,col-3,three-value", ","),
 			},
 		}
 

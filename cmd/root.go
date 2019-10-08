@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	timed   bool
+	timed bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -77,14 +77,12 @@ Most suitable for csv files created from database tables`,
 			config.GetPrimaryKeys(),
 			config.GetValueColumns(),
 			config.GetIncludeColumnPositions(),
-			true,
 		)
 		deltaConfig := digest.NewConfig(
 			deltaFile,
 			config.GetPrimaryKeys(),
 			config.GetValueColumns(),
 			config.GetIncludeColumnPositions(),
-			false,
 		)
 
 		diff, err := digest.Diff(*baseConfig, *deltaConfig)
@@ -124,7 +122,7 @@ func isValidFile(path string) error {
 func Execute() {
 	rootCmd.Version = Version()
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 }

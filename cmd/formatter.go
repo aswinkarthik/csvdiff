@@ -60,6 +60,7 @@ func (f *Formatter) legacyJSON(diff digest.Differences) error {
 	type jsonDifference struct {
 		Additions     []string
 		Modifications []string
+		Deletions     []string
 	}
 
 	includes := config.GetIncludeColumnPositions()
@@ -74,7 +75,12 @@ func (f *Formatter) legacyJSON(diff digest.Differences) error {
 		modifications = append(modifications, includes.String(modification.Current))
 	}
 
-	jsonDiff := jsonDifference{Additions: additions, Modifications: modifications}
+	deletions := make([]string, 0, len(diff.Deletions))
+	for _, deletion := range diff.Deletions {
+		deletions = append(deletions, includes.String(deletion))
+	}
+
+	jsonDiff := jsonDifference{Additions: additions, Modifications: modifications, Deletions: deletions}
 	data, err := json.MarshalIndent(jsonDiff, "", "  ")
 
 	if err != nil {
@@ -100,6 +106,11 @@ func (f *Formatter) json(diff digest.Differences) error {
 		additions = append(additions, includes.String(addition))
 	}
 
+	deletions := make([]string, 0, len(diff.Deletions))
+	for _, deletion := range diff.Deletions {
+		deletions = append(deletions, includes.String(deletion))
+	}
+
 	type modification struct {
 		Original string
 		Current  string
@@ -108,6 +119,7 @@ func (f *Formatter) json(diff digest.Differences) error {
 	type jsonDifference struct {
 		Additions     []string
 		Modifications []modification
+		Deletions     []string
 	}
 
 	modifications := make([]modification, 0, len(diff.Modifications))
@@ -116,7 +128,7 @@ func (f *Formatter) json(diff digest.Differences) error {
 		modifications = append(modifications, m)
 	}
 
-	data, err := json.MarshalIndent(jsonDifference{Additions: additions, Modifications: modifications}, "", "  ")
+	data, err := json.MarshalIndent(jsonDifference{Additions: additions, Modifications: modifications, Deletions: deletions}, "", "  ")
 
 	if err != nil {
 		return fmt.Errorf("error when serializing with JSON formatter: %v", err)
@@ -136,6 +148,7 @@ func (f *Formatter) json(diff digest.Differences) error {
 func (f *Formatter) rowMark(diff digest.Differences) error {
 	_, _ = fmt.Fprintf(f.stderr, "Additions %d\n", len(diff.Additions))
 	_, _ = fmt.Fprintf(f.stderr, "Modifications %d\n", len(diff.Modifications))
+	_, _ = fmt.Fprintf(f.stderr, "Deletions %d\n", len(diff.Deletions))
 	_, _ = fmt.Fprintf(f.stderr, "Rows:\n")
 
 	includes := config.GetIncludeColumnPositions()
@@ -150,12 +163,21 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 		modifications = append(modifications, includes.String(modification.Current))
 	}
 
+	deletions := make([]string, 0, len(diff.Deletions))
+	for _, deletion := range diff.Deletions {
+		deletions = append(deletions, includes.String(deletion))
+	}
+
 	for _, added := range additions {
 		_, _ = fmt.Fprintf(f.stdout, "%s,%s\n", added, "ADDED")
 	}
 
 	for _, modified := range modifications {
 		_, _ = fmt.Fprintf(f.stdout, "%s,%s\n", modified, "MODIFIED")
+	}
+
+	for _, deleted := range deletions {
+		_, _ = fmt.Fprintf(f.stdout, "%s,%s\n", deleted, "DELETED")
 	}
 
 	return nil
@@ -177,6 +199,10 @@ func (f *Formatter) lineDiff(diff digest.Differences) error {
 	for _, modification := range diff.Modifications {
 		red(f.stdout, "- %s\n", includes.String(modification.Original))
 		green(f.stdout, "+ %s\n", includes.String(modification.Current))
+	}
+	blue(f.stderr, "# Deletions (%d)\n", len(diff.Deletions))
+	for _, deletion := range diff.Deletions {
+		red(f.stdout, "- %s\n", includes.String(deletion))
 	}
 
 	return nil
@@ -219,6 +245,11 @@ func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, addi
 			}
 		}
 		_, _ = fmt.Fprintln(f.stdout, digest.Positions{}.String(result))
+	}
+
+	_, _ = fmt.Fprintln(f.stderr, blue("# Deletions (%d)", len(diff.Deletions)))
+	for _, deletion := range diff.Deletions {
+		_, _ = fmt.Fprintln(f.stdout, red(deletionFormat, includes.String(deletion)))
 	}
 
 	return nil

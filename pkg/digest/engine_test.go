@@ -36,8 +36,8 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 
 		actualDigest := digestsFrom(dChan)
 		expectedDigest := []digest.Digest{
-			{Key: firstKey, Value: firstDigest},
-			{Key: secondKey, Value: secondDigest},
+			{Key: firstKey, Value: firstDigest, Source: strings.Split(firstLine, ",")},
+			{Key: secondKey, Value: secondDigest, Source: strings.Split(secondLine, ",")},
 		}
 
 		assert.ElementsMatch(t, expectedDigest, actualDigest)
@@ -45,9 +45,8 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 
 	t.Run("should create digest skeeping source", func(t *testing.T) {
 		conf := digest.Config{
-			Reader:     strings.NewReader(firstLine + "\n" + secondLine),
-			Key:        []int{0},
-			KeepSource: true,
+			Reader: strings.NewReader(firstLine + "\n" + secondLine),
+			Key:    []int{0},
 		}
 
 		engine := digest.NewEngine(conf)
@@ -82,8 +81,8 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 
 		actualDigest := digestsFrom(dChan)
 		expectedDigest := []digest.Digest{
-			{Key: firstKey, Value: fridayDigest},
-			{Key: secondKey, Value: saturdayDigest},
+			{Key: firstKey, Value: fridayDigest, Source: strings.Split(firstLine, ",")},
+			{Key: secondKey, Value: saturdayDigest, Source: strings.Split(secondLine, ",")},
 		}
 
 		assert.ElementsMatch(t, expectedDigest, actualDigest)

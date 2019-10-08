@@ -13,7 +13,8 @@ import (
 func TestLegacyJSONFormat(t *testing.T) {
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
-		Modifications: []digest.Modification{digest.Modification{Current: []string{"modification"}}},
+		Modifications: []digest.Modification{{Current: []string{"modification"}}},
+		Deletions:     []digest.Deletion{[]string{"deletions"}},
 	}
 	expected := `{
   "Additions": [
@@ -21,6 +22,9 @@ func TestLegacyJSONFormat(t *testing.T) {
   ],
   "Modifications": [
     "modification"
+  ],
+  "Deletions": [
+    "deletions"
   ]
 }`
 
@@ -37,7 +41,8 @@ func TestLegacyJSONFormat(t *testing.T) {
 func TestJSONFormat(t *testing.T) {
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
-		Modifications: []digest.Modification{digest.Modification{Original: []string{"original"}, Current: []string{"modification"}}},
+		Modifications: []digest.Modification{{Original: []string{"original"}, Current: []string{"modification"}}},
+		Deletions:     []digest.Deletion{[]string{"deletions"}},
 	}
 	expected := `{
   "Additions": [
@@ -48,6 +53,9 @@ func TestJSONFormat(t *testing.T) {
       "Original": "original",
       "Current": "modification"
     }
+  ],
+  "Deletions": [
+    "deletions"
   ]
 }`
 
@@ -63,13 +71,16 @@ func TestJSONFormat(t *testing.T) {
 func TestRowMarkFormatter(t *testing.T) {
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
-		Modifications: []digest.Modification{digest.Modification{Current: []string{"modification"}}},
+		Modifications: []digest.Modification{{Current: []string{"modification"}}},
+		Deletions:     []digest.Deletion{[]string{"deletions"}},
 	}
 	expectedStdout := `additions,ADDED
 modification,MODIFIED
+deletions,DELETED
 `
 	expectedStderr := `Additions 1
 Modifications 1
+Deletions 1
 Rows:
 `
 
@@ -89,18 +100,21 @@ func TestLineDiff(t *testing.T) {
 	diff := digest.Differences{
 		Additions: []digest.Addition{[]string{"additions"}},
 		Modifications: []digest.Modification{
-			digest.Modification{
+			{
 				Original: []string{"original", "comma,separated,value"},
 				Current:  []string{"modification", "comma,separated,value-2"},
 			},
 		},
+		Deletions: []digest.Deletion{{"deletion", "this-row-was-deleted"}},
 	}
 	expectedStdout := `+ additions
 - original,"comma,separated,value"
 + modification,"comma,separated,value-2"
+- deletion,this-row-was-deleted
 `
 	expectedStderr := `# Additions (1)
 # Modifications (1)
+# Deletions (1)
 `
 
 	var stdout bytes.Buffer
@@ -118,13 +132,16 @@ func TestLineDiff(t *testing.T) {
 func TestWordDiff(t *testing.T) {
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
-		Modifications: []digest.Modification{digest.Modification{Original: []string{"original"}, Current: []string{"modification"}}},
+		Modifications: []digest.Modification{{Original: []string{"original"}, Current: []string{"modification"}}},
+		Deletions:     []digest.Deletion{{"deletions"}},
 	}
 	expectedStdout := `{+additions+}
 [-original-]{+modification+}
+[-deletions-]
 `
 	expectedStderr := `# Additions (1)
 # Modifications (1)
+# Deletions (1)
 `
 
 	var stdout bytes.Buffer
@@ -142,13 +159,16 @@ func TestWordDiff(t *testing.T) {
 func TestColorWords(t *testing.T) {
 	diff := digest.Differences{
 		Additions:     []digest.Addition{[]string{"additions"}},
-		Modifications: []digest.Modification{digest.Modification{Original: []string{"original"}, Current: []string{"modification"}}},
+		Modifications: []digest.Modification{{Original: []string{"original"}, Current: []string{"modification"}}},
+		Deletions:     []digest.Deletion{{"deletions"}},
 	}
 	expectedStdout := `additions
 originalmodification
+deletions
 `
 	expectedStderr := `# Additions (1)
 # Modifications (1)
+# Deletions (1)
 `
 
 	var stdout bytes.Buffer
@@ -162,6 +182,7 @@ originalmodification
 	assert.Equal(t, expectedStdout, stdout.String())
 	assert.Equal(t, expectedStderr, stderr.String())
 }
+
 func TestWrongFormatter(t *testing.T) {
 	diff := digest.Differences{}
 	formatter := cmd.NewFormatter(nil, nil, cmd.Config{Format: "random-str"})

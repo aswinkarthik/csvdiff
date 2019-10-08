@@ -10,6 +10,7 @@ type messageType int
 const (
 	addition     messageType = iota
 	modification messageType = iota
+	deletion     messageType = iota
 )
 
 // Differences represents the differences
@@ -17,10 +18,14 @@ const (
 type Differences struct {
 	Additions     []Addition
 	Modifications []Modification
+	Deletions     []Deletion
 }
 
 // Addition is a row appearing in delta but missing in base
 type Addition []string
+
+// Deletion is a row appearing in base but missing in delta
+type Deletion []string
 
 // Modification is a row present in both delta and base
 // with the values column changed in delta
@@ -51,12 +56,12 @@ func Diff(baseConfig, deltaConfig Config) (Differences, error) {
 		return Differences{}, fmt.Errorf("error processing base file: %v", err)
 	}
 
-	deltaConfig.KeepSource = true
 	deltaEngine := NewEngine(deltaConfig)
 	deltaDigestChannel, deltaErrorChannel := deltaEngine.StreamDigests()
 
 	additions := make([]Addition, 0)
 	modifications := make([]Modification, 0)
+	deletions := make([]Deletion, 0)
 
 	msgChannel := streamDifferences(baseFileDigest, deltaDigestChannel)
 	for msg := range msgChannel {
@@ -65,6 +70,10 @@ func Diff(baseConfig, deltaConfig Config) (Differences, error) {
 			additions = append(additions, msg.current)
 		case modification:
 			modifications = append(modifications, Modification{Original: msg.original, Current: msg.current})
+		case deletion:
+			deletions = append(deletions, msg.current)
+		default:
+			continue
 		}
 	}
 
@@ -72,7 +81,7 @@ func Diff(baseConfig, deltaConfig Config) (Differences, error) {
 		return Differences{}, fmt.Errorf("error processing delta file: %v", err)
 	}
 
-	return Differences{Additions: additions, Modifications: modifications}, nil
+	return Differences{Additions: additions, Modifications: modifications, Deletions: deletions}, nil
 }
 
 func streamDifferences(baseFileDigest *FileDigest, digestChannel chan []Digest) chan message {
@@ -89,11 +98,17 @@ func streamDifferences(baseFileDigest *FileDigest, digestChannel chan []Digest) 
 						// Modification
 						msgChannel <- message{_type: modification, current: d.Source, original: base.SourceMap[d.Key]}
 					}
+					// delete from sourceMap so that at the end only deletions are left in base
+					delete(base.SourceMap, d.Key)
 				} else {
 					// Addition
 					msgChannel <- message{_type: addition, current: d.Source}
 				}
 			}
+		}
+
+		for _, value := range base.SourceMap {
+			msgChannel <- message{_type: deletion, current: value}
 		}
 
 	}(baseFileDigest, digestChannel, msgChannel)
