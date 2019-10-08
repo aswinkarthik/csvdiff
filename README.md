@@ -24,7 +24,7 @@ I wanted to compare if the rows of a table before and after a given time and see
 
 ## Demo
 
-[![asciicast](https://asciinema.org/a/MxhlSEZ1OAnHJA3tOrhMjcdgC.svg)](https://asciinema.org/a/MxhlSEZ1OAnHJA3tOrhMjcdgC?speed=2&autoplay=1&size=medium&rows=20&cols=150)
+[![asciicast](https://asciinema.org/a/YNO5G0b2qL92MZWmb2IeiXveN.svg)](https://asciinema.org/a/YNO5G0b2qL92MZWmb2IeiXveN?speed=2&autoplay=1&size=medium&rows=20&cols=150)
 
 ## Usage
 
@@ -35,7 +35,8 @@ $ csvdiff base.csv delta.csv
 # Modifications (1)
 - 69,48,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491
 + 69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491
-
+# Deletions (1)
+- 1618,907,deleted-website.com,com,19827,32902,deleted-website.com,com,1621,909,19787,32822
 ```
 
 
@@ -91,10 +92,10 @@ go get -u github.com/aswinkarthik/csvdiff
 
 - Additions
 - Modifications
+- Deletions
 
 ## Not Supported
 
-- Deletions
 - Non comma separators
 - Cannot be used as a generic difftool. Requires a column to be used as a primary key from the csv.
 
@@ -134,7 +135,10 @@ There are a number of formats supported
   "Modifications": [{
     "Original": "69,1048,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491",
     "Current":  "69,1049,aol.com,com,97543,225532,aol.com,com,70,49,97328,224491"
-  }]
+  }],
+  "Deletions": [
+    "1615,905,deleted-website.com,com,19833,33110,deleted-website.com,com,1613,902,19835,33135"
+  ]
 }
 ```
 
@@ -161,10 +165,9 @@ $ go test -v ./...
 - The delta map is compared with the base map. As long as primary key is unchanged, they row will have same `key`. An entry in delta map is a
   - **Addition**, if the base-map's does not have a `value`.
   - **Modification**, if the base-map's `value` is different.
+  - **Deletions**, if the base-map has no match on the delta map.
 
 ## Credits
 
 - Uses 64 bit [xxHash](https://cyan4973.github.io/xxHash/) algorithm, an extremely fast non-cryptographic hash algorithm, for creating the hash. Implementations from [cespare](https://github.com/cespare/xxhash)
 - Used [Majestic million](https://blog.majestic.com/development/majestic-million-csv-daily/) data for demo.
-
-_Benchmark tests can be found [here](/benchmark)._
