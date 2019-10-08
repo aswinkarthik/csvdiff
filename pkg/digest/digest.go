@@ -25,15 +25,6 @@ func CreateDigest(csv []string, pKey Positions, pRow Positions) Digest {
 	key := xxhash.Sum64String(pKey.Join(csv))
 	digest := xxhash.Sum64String(pRow.Join(csv))
 
-	return Digest{Key: key, Value: digest}
-}
-
-// CreateDigestWithSource creates a Digest for each line of csv.
-// There will be one Digest per line
-func CreateDigestWithSource(csv []string, pKey Positions, pRow Positions) Digest {
-	key := xxhash.Sum64String(pKey.Join(csv))
-	digest := xxhash.Sum64String(pRow.Join(csv))
-
 	return Digest{Key: key, Value: digest, Source: csv}
 }
 
@@ -47,12 +38,7 @@ func Create(config *Config) (map[uint64]uint64, map[uint64][]string, error) {
 	reader := csv.NewReader(config.Reader)
 
 	output := make(map[uint64]uint64)
-
-	var sourceMap map[uint64][]string
-
-	if config.KeepSource {
-		sourceMap = make(map[uint64][]string)
-	}
+	sourceMap := make(map[uint64][]string)
 
 	digestChannel := make(chan []Digest, bufferSize*maxProcs)
 	errorChannel := make(chan error)
@@ -63,10 +49,7 @@ func Create(config *Config) (map[uint64]uint64, map[uint64][]string, error) {
 	for digests := range digestChannel {
 		for _, digest := range digests {
 			output[digest.Key] = digest.Value
-
-			if config.KeepSource {
-				sourceMap[digest.Key] = digest.Source
-			}
+			sourceMap[digest.Key] = digest.Source
 		}
 	}
 
@@ -106,16 +89,8 @@ func createDigestForNLines(lines [][]string,
 	wg *sync.WaitGroup,
 ) {
 	output := make([]Digest, len(lines))
-	var createDigestFunc func(csv []string, pKey Positions, pRow Positions) Digest
-
-	if config.KeepSource {
-		createDigestFunc = CreateDigestWithSource
-	} else {
-		createDigestFunc = CreateDigest
-	}
-
 	for i, line := range lines {
-		output[i] = createDigestFunc(line, config.Key, config.Value)
+		output[i] = CreateDigest(line, config.Key, config.Value)
 	}
 
 	digestChannel <- output

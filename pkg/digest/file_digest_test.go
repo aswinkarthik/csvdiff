@@ -17,16 +17,6 @@ func TestNewFileDigest(t *testing.T) {
 	assert.Zero(t, len(fd.SourceMap))
 }
 
-func TestFileDigest_AppendWithoutSource(t *testing.T) {
-	fd := digest.NewFileDigest()
-
-	fd.AppendWithoutSource(digest.Digest{Key: uint64(1), Value: uint64(1)})
-
-	assert.NotNil(t, fd)
-	assert.Len(t, fd.Digests, 1)
-	assert.Zero(t, len(fd.SourceMap))
-}
-
 func TestFileDigest_Append(t *testing.T) {
 	fd := digest.NewFileDigest()
 

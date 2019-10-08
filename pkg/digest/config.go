@@ -10,11 +10,10 @@ import "io"
 // Include: Include these positions in output. It is Value positions by default.
 // KeepSource: return the source and target string if diff is computed
 type Config struct {
-	Key        Positions
-	Value      Positions
-	Include    Positions
-	Reader     io.Reader
-	KeepSource bool
+	Key     Positions
+	Value   Positions
+	Include Positions
+	Reader  io.Reader
 }
 
 // NewConfig creates an instance of Config struct.
@@ -23,17 +22,15 @@ func NewConfig(
 	primaryKey Positions,
 	valueColumns Positions,
 	includeColumns Positions,
-	keepSource bool,
 ) *Config {
 	if len(includeColumns) == 0 {
 		includeColumns = valueColumns
 	}
 
 	return &Config{
-		Reader:     r,
-		Key:        primaryKey,
-		Value:      valueColumns,
-		Include:    includeColumns,
-		KeepSource: keepSource,
+		Reader:  r,
+		Key:     primaryKey,
+		Value:   valueColumns,
+		Include: includeColumns,
 	}
 }

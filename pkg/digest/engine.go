@@ -27,19 +27,11 @@ func (e Engine) GenerateFileDigest() (*FileDigest, error) {
 
 	fd := NewFileDigest()
 
-	var appendFunc func(Digest)
-
-	if e.config.KeepSource {
-		appendFunc = fd.Append
-	} else {
-		appendFunc = fd.AppendWithoutSource
-	}
-
 	digestChannel, errorChannel := e.StreamDigests()
 
 	for digests := range digestChannel {
 		for _, digest := range digests {
-			appendFunc(digest)
+			fd.Append(digest)
 		}
 	}
 
@@ -98,17 +90,8 @@ func (e Engine) StreamDigests() (chan []Digest, chan error) {
 
 func (e Engine) digestForLines(lines [][]string, digestChannel chan []Digest, wg *sync.WaitGroup) {
 	output := make([]Digest, 0, len(lines))
-	var createDigestFunc func(csv []string, pKey Positions, pRow Positions) Digest
-	config := e.config
-
-	if config.KeepSource {
-		createDigestFunc = CreateDigestWithSource
-	} else {
-		createDigestFunc = CreateDigest
-	}
-
 	for _, line := range lines {
-		output = append(output, createDigestFunc(line, config.Key, config.Value))
+		output = append(output, CreateDigest(line, e.config.Key, e.config.Value))
 	}
 
 	digestChannel <- output

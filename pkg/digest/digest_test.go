@@ -10,18 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateDigest(t *testing.T) {
-	firstLine := "1,someline"
-	firstKey := xxhash.Sum64String("1")
-	firstLineDigest := xxhash.Sum64String(firstLine)
-
-	expectedDigest := digest.Digest{Key: firstKey, Value: firstLineDigest, Source: nil}
-
-	actualDigest := digest.CreateDigest(strings.Split(firstLine, digest.Separator), []int{0}, []int{})
-
-	assert.Equal(t, expectedDigest, actualDigest)
-}
-
 func TestCreateDigestWithSource(t *testing.T) {
 	firstLine := "1,someline"
 	firstKey := xxhash.Sum64String("1")
@@ -33,7 +21,7 @@ func TestCreateDigestWithSource(t *testing.T) {
 		Source: strings.Split(firstLine, ","),
 	}
 
-	actualDigest := digest.CreateDigestWithSource(strings.Split(firstLine, digest.Separator), []int{0}, []int{})
+	actualDigest := digest.CreateDigest(strings.Split(firstLine, digest.Separator), []int{0}, []int{})
 
 	assert.Equal(t, expectedDigest, actualDigest)
 }
@@ -60,7 +48,7 @@ func TestDigestForFile(t *testing.T) {
 		expectedDigest := map[uint64]uint64{firstKey: firstDigest, secondKey: secondDigest}
 
 		assert.NoError(t, err)
-		assert.Len(t, sourceMap, 0)
+		assert.Len(t, sourceMap, 2)
 		assert.Equal(t, expectedDigest, actualDigest)
 	})
 
@@ -101,29 +89,26 @@ func TestNewConfig(t *testing.T) {
 	primaryColumns := digest.Positions{0}
 	values := digest.Positions{0, 1, 2}
 	include := digest.Positions{0, 1}
-	keepSource := true
 
 	t.Run("should create config from given params", func(t *testing.T) {
-		conf := digest.NewConfig(r, primaryColumns, values, include, keepSource)
+		conf := digest.NewConfig(r, primaryColumns, values, include)
 		expectedConf := digest.Config{
-			Reader:     r,
-			Key:        primaryColumns,
-			Value:      values,
-			Include:    include,
-			KeepSource: keepSource,
+			Reader:  r,
+			Key:     primaryColumns,
+			Value:   values,
+			Include: include,
 		}
 
 		assert.Equal(t, expectedConf, *conf)
 	})
 
 	t.Run("should use valueColumns as includeColumns for includes not specified", func(t *testing.T) {
-		conf := digest.NewConfig(r, primaryColumns, values, nil, keepSource)
+		conf := digest.NewConfig(r, primaryColumns, values, nil)
 		expectedConf := digest.Config{
-			Reader:     r,
-			Key:        primaryColumns,
-			Value:      values,
-			Include:    values,
-			KeepSource: keepSource,
+			Reader:  r,
+			Key:     primaryColumns,
+			Value:   values,
+			Include: values,
 		}
 
 		assert.Equal(t, expectedConf, *conf)
