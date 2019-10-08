@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"fmt"
 	"github.com/spf13/afero"
+	"io"
 	"strings"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
@@ -94,7 +96,64 @@ func (c *Context) Validate(fs afero.Fs) error {
 		}
 	}
 
+	{
+		baseRecordCount, err := getColumnsCount(fs, c.BaseFilename)
+		if err != nil {
+			return err
+		}
+		deltaRecordCount, err := getColumnsCount(fs, c.DeltaFilename)
+		if err != nil {
+			return err
+		}
+
+		if baseRecordCount != deltaRecordCount {
+			return fmt.Errorf("base-file and delta-file columns count do not match")
+		}
+
+		comparator := func(element int) bool {
+			return element < baseRecordCount
+		}
+
+		if !assertAll(c.PrimaryKeyPositions, comparator) {
+			return fmt.Errorf("--primary-key positions are out of bounds")
+		}
+		if !assertAll(c.IncludeColumnPositions, comparator) {
+			return fmt.Errorf("--include positions are out of bounds")
+		}
+		if !assertAll(c.ValueColumnPositions, comparator) {
+			return fmt.Errorf("--columns positions are out of bounds")
+		}
+	}
+
 	return nil
+}
+
+func assertAll(elements []int, assertFn func(element int) bool) bool {
+	for _, el := range elements {
+		if !assertFn(el) {
+			return false
+		}
+	}
+	return true
+}
+
+func getColumnsCount(fs afero.Fs, filename string) (int, error) {
+	base, err := fs.Open(filename)
+	if err != nil {
+		return 0, err
+	}
+	defer base.Close()
+	csvReader := csv.NewReader(base)
+
+	record, err := csvReader.Read()
+	if err != nil {
+		if err == io.EOF {
+			return 0, fmt.Errorf("unable to process headers from csv file. EOF reached")
+		}
+		return 0, err
+	}
+
+	return len(record), nil
 }
 
 // BaseDigestConfig creates a digest.Context from cmd.Context

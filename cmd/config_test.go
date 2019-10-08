@@ -34,10 +34,16 @@ func TestValueColumnPositions(t *testing.T) {
 
 func TestConfigValidate(t *testing.T) {
 	validConfig := func(t *testing.T, fs afero.Fs) *cmd.Context {
-		_, err := fs.Create("/base.csv")
-		assert.NoError(t, err)
-		_, err = fs.Create("/delta.csv")
-		assert.NoError(t, err)
+		{
+			baseContent := []byte("id,name,age,desc")
+			err := afero.WriteFile(fs, "/base.csv", baseContent, os.ModePerm)
+			assert.NoError(t, err)
+		}
+		{
+			deltaContent := []byte("id,name,age,desc")
+			err := afero.WriteFile(fs, "/delta.csv", deltaContent, os.ModePerm)
+			assert.NoError(t, err)
+		}
 		return &cmd.Context{Format: "json", BaseFilename: "/base.csv", DeltaFilename: "/delta.csv"}
 	}
 
@@ -77,6 +83,7 @@ func TestConfigValidate(t *testing.T) {
 		assert.EqualError(t, err, "base-file /base.csv should be a file")
 
 		_, err = fs.Create("/valid-base.csv")
+		assert.NoError(t, err)
 		err = fs.Mkdir("/delta.csv", os.ModePerm)
 		assert.NoError(t, err)
 
@@ -87,14 +94,72 @@ func TestConfigValidate(t *testing.T) {
 
 	t.Run("should validate if both base and delta file exist", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
-		_, err := fs.Create("/base.csv")
-		assert.NoError(t, err)
-		_, err = fs.Create("/delta.csv")
-		assert.NoError(t, err)
+		validConfig(t, fs)
 
 		config := &cmd.Context{Format: "json", BaseFilename: "/base.csv", DeltaFilename: "/delta.csv"}
-		err = config.Validate(fs)
+		err := config.Validate(fs)
 		assert.NoError(t, err)
+	})
+
+	t.Run("should validate if positions are within the limits of the csv file", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		{
+			baseContent := []byte("id,name,age,desc")
+			err := afero.WriteFile(fs, "/base.csv", baseContent, os.ModePerm)
+			assert.NoError(t, err)
+		}
+		{
+			deltaContent := []byte("id,name,age,desc")
+			err := afero.WriteFile(fs, "/delta.csv", deltaContent, os.ModePerm)
+			assert.NoError(t, err)
+		}
+
+		t.Run("primary key positions", func(t *testing.T) {
+			ctx := &cmd.Context{
+				Format:              "json",
+				BaseFilename:        "/base.csv",
+				DeltaFilename:       "/delta.csv",
+				PrimaryKeyPositions: digest.Positions{4},
+			}
+
+			assert.EqualError(t, ctx.Validate(fs), "--primary-key positions are out of bounds")
+		})
+
+		t.Run("include positions", func(t *testing.T) {
+			ctx := &cmd.Context{
+				Format:                 "json",
+				BaseFilename:           "/base.csv",
+				DeltaFilename:          "/delta.csv",
+				IncludeColumnPositions: digest.Positions{4},
+			}
+
+			assert.EqualError(t, ctx.Validate(fs), "--include positions are out of bounds")
+		})
+
+		t.Run("value positions", func(t *testing.T) {
+			ctx := &cmd.Context{
+				Format:               "json",
+				BaseFilename:         "/base.csv",
+				DeltaFilename:        "/delta.csv",
+				ValueColumnPositions: digest.Positions{4},
+			}
+
+			assert.EqualError(t, ctx.Validate(fs), "--columns positions are out of bounds")
+		})
+
+		t.Run("inequal base and delta files", func(t *testing.T) {
+			deltaContent := []byte("id,name,age,desc,size")
+			err := afero.WriteFile(fs, "/delta.csv", deltaContent, os.ModePerm)
+			assert.NoError(t, err)
+
+			ctx := &cmd.Context{
+				Format:        "json",
+				BaseFilename:  "/base.csv",
+				DeltaFilename: "/delta.csv",
+			}
+
+			assert.EqualError(t, ctx.Validate(fs), "base-file and delta-file columns count do not match")
+		})
 	})
 }
 
