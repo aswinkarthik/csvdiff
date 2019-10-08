@@ -48,15 +48,7 @@ Most suitable for csv files created from database tables`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		// Validate args
 		if len(args) != 2 {
-			return fmt.Errorf("Pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
-		}
-
-		if err := isValidFile(args[0]); err != nil {
-			return err
-		}
-
-		if err := isValidFile(args[1]); err != nil {
-			return err
+			return fmt.Errorf("pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
 		}
 
 		return nil
@@ -110,23 +102,6 @@ func runContext(
 	return NewFormatter(outputStream, errorStream, ctx).Format(diff)
 }
 
-func isValidFile(path string) error {
-	fileInfo, err := os.Stat(path)
-
-	if os.IsNotExist(err) {
-		return fmt.Errorf("%s does not exist", path)
-	}
-
-	if fileInfo.IsDir() {
-		return fmt.Errorf("%s is a directory. Please pass a file", path)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading path: %v", err)
-	}
-
-	return nil
-}
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -155,15 +130,6 @@ func init() {
 	rootCmd.Flags().StringVarP(&format, "format", "o", "diff", fmt.Sprintf("Available (%s)", strings.Join(allFormats, "|")))
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
-}
-
-func newReadCloser(filename string) (io.ReadCloser, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return file, nil
 }
 
 func timeTrack(start time.Time, name string) {
