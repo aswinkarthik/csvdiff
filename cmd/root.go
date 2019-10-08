@@ -78,28 +78,36 @@ Most suitable for csv files created from database tables`,
 			DeltaFilename:          deltaFilename,
 		}
 
-		if err := ctx.Validate(fs); err != nil {
-			return err
-		}
-
-		baseConfig, err := ctx.BaseDigestConfig(fs)
-		if err != nil {
-			return fmt.Errorf("error opening base-file %s: %v", baseFilename, err)
-		}
-		deltaConfig, err := ctx.DeltaDigestConfig(fs)
-		if err != nil {
-			return fmt.Errorf("error opening delta-file %s: %v", deltaFilename, err)
-		}
-		defer ctx.Close()
-
-		diff, err := digest.Diff(baseConfig, deltaConfig)
-
-		if err != nil {
-			return err
-		}
-
-		return NewFormatter(os.Stdout, os.Stderr, ctx).Format(diff)
+		return runContext(ctx, fs, os.Stdout, os.Stderr)
 	},
+}
+
+func runContext(
+	ctx Context,
+	fs afero.Fs,
+	outputStream,
+	errorStream io.Writer) error {
+	if err := ctx.Validate(fs); err != nil {
+		return err
+	}
+
+	baseConfig, err := ctx.BaseDigestConfig(fs)
+	if err != nil {
+		return fmt.Errorf("error opening base-file %s: %v", ctx.BaseFilename, err)
+	}
+	deltaConfig, err := ctx.DeltaDigestConfig(fs)
+	if err != nil {
+		return fmt.Errorf("error opening delta-file %s: %v", ctx.DeltaFilename, err)
+	}
+	defer ctx.Close()
+
+	diff, err := digest.Diff(baseConfig, deltaConfig)
+
+	if err != nil {
+		return err
+	}
+
+	return NewFormatter(outputStream, errorStream, ctx).Format(diff)
 }
 
 func isValidFile(path string) error {
