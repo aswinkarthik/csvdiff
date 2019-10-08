@@ -7,12 +7,6 @@ import (
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 )
 
-var config Config
-
-func init() {
-	config = Config{}
-}
-
 // Config is to store all command line Flags.
 type Config struct {
 	PrimaryKeyPositions    []int
@@ -39,7 +33,7 @@ func (c *Config) GetValueColumns() digest.Positions {
 
 // GetIncludeColumnPositions is to return the --include flags as digest.Positions array.
 // If empty, it is value columns
-func (c *Config) GetIncludeColumnPositions() digest.Positions {
+func (c Config) GetIncludeColumnPositions() digest.Positions {
 	if len(c.IncludeColumnPositions) > 0 {
 		return c.IncludeColumnPositions
 	}
