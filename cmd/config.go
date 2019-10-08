@@ -51,6 +51,13 @@ func NewContext(
 		return nil, fmt.Errorf("base-file and delta-file columns count do not match")
 	}
 
+	if len(ignoreValueColumnPositions) > 0 && len(valueColumnPositions) > 0 {
+		return nil, fmt.Errorf("only one of --columns or --ignore-columns")
+	}
+	if len(ignoreValueColumnPositions) > 0 {
+		valueColumnPositions = inferValueColumns(baseRecordCount, ignoreValueColumnPositions)
+	}
+
 	baseFile, err := fs.Open(baseFilename)
 	if err != nil {
 		return nil, err
@@ -138,6 +145,24 @@ func (c *Context) validate() error {
 	}
 
 	return nil
+}
+
+func inferValueColumns(recordCount int, ignoreValueColumns []int) digest.Positions {
+	lookupMap := make(map[int]struct{})
+	for _, pos := range ignoreValueColumns {
+		lookupMap[pos] = struct{}{}
+	}
+
+	valueColumns := make(digest.Positions, 0)
+	if len(ignoreValueColumns) > 0 {
+		for i := 0; i < recordCount; i++ {
+			if _, exists := lookupMap[i]; !exists {
+				valueColumns = append(valueColumns, i)
+			}
+		}
+	}
+
+	return valueColumns
 }
 
 func assertAll(elements []int, assertFn func(element int) bool) bool {

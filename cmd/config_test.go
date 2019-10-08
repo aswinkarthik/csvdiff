@@ -300,6 +300,24 @@ func TestNewContext(t *testing.T) {
 			assert.EqualError(t, err, "base-file and delta-file columns count do not match")
 		})
 	})
+
+	t.Run("should pass only one of columns or ignore columns", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		setupFiles(t, fs)
+
+		_, err := cmd.NewContext(
+			fs,
+			nil,
+			[]int{0},
+			[]int{0},
+			nil,
+			"jSOn",
+			"/base.csv",
+			"/delta.csv",
+		)
+
+		assert.EqualError(t, err, "only one of --columns or --ignore-columns")
+	})
 }
 
 func TestConfig_DigestConfig(t *testing.T) {
@@ -326,17 +344,49 @@ func TestConfig_DigestConfig(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, baseConfig.Reader)
-		assert.Equal(t, baseConfig.Value, valueColumns)
-		assert.Equal(t, baseConfig.Key, primaryColumns)
-		assert.Equal(t, baseConfig.Include, includeColumns)
+		assert.Equal(t, valueColumns, baseConfig.Value)
+		assert.Equal(t, primaryColumns, baseConfig.Key)
+		assert.Equal(t, includeColumns, baseConfig.Include)
 
 		deltaConfig, err := ctx.DeltaDigestConfig()
 
 		assert.NoError(t, err)
 		assert.NotNil(t, deltaConfig.Reader)
-		assert.Equal(t, deltaConfig.Value, valueColumns)
-		assert.Equal(t, deltaConfig.Key, primaryColumns)
-		assert.Equal(t, deltaConfig.Include, includeColumns)
+		assert.Equal(t, valueColumns, deltaConfig.Value)
+		assert.Equal(t, primaryColumns, deltaConfig.Key)
+		assert.Equal(t, includeColumns, deltaConfig.Include)
+	})
+	t.Run("should infer values columns as inverse of ignore columns digest ctx", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		setupFiles(t, fs)
+
+		ignoreValueColumns := digest.Positions{0, 1, 2}
+		primaryColumns := digest.Positions{0, 1}
+		ctx, err := cmd.NewContext(
+			fs,
+			primaryColumns,
+			nil,
+			ignoreValueColumns,
+			nil,
+			"jSOn",
+			"/base.csv",
+			"/delta.csv",
+		)
+		assert.NoError(t, err)
+
+		baseConfig, err := ctx.BaseDigestConfig()
+
+		assert.NoError(t, err)
+		assert.NotNil(t, baseConfig.Reader)
+		assert.Equal(t, digest.Positions{3}, baseConfig.Value)
+		assert.Equal(t, primaryColumns, baseConfig.Key)
+
+		deltaConfig, err := ctx.DeltaDigestConfig()
+
+		assert.NoError(t, err)
+		assert.NotNil(t, deltaConfig.Reader)
+		assert.Equal(t, digest.Positions{3}, deltaConfig.Value)
+		assert.Equal(t, primaryColumns, deltaConfig.Key)
 	})
 }
 func setupFiles(t *testing.T, fs afero.Fs) {
