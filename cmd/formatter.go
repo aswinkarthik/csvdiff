@@ -24,18 +24,18 @@ var allFormats = []string{rowmark, jsonFormat, legacyJSONFormat, lineDiff, wordD
 type Formatter struct {
 	stdout io.Writer
 	stderr io.Writer
-	config Config
+	ctx    Context
 }
 
 // NewFormatter can be used to create a new formatter
-func NewFormatter(stdout, stderr io.Writer, config Config) *Formatter {
-	return &Formatter{stdout: stdout, stderr: stderr, config: config}
+func NewFormatter(stdout, stderr io.Writer, ctx Context) *Formatter {
+	return &Formatter{stdout: stdout, stderr: stderr, ctx: ctx}
 }
 
-// Format can be used to format the differences based on config
+// Format can be used to format the differences based on ctx
 // to appropriate writers
 func (f *Formatter) Format(diff digest.Differences) error {
-	switch f.config.Format {
+	switch f.ctx.Format {
 	case legacyJSONFormat:
 		return f.legacyJSON(diff)
 	case jsonFormat:
@@ -63,7 +63,7 @@ func (f *Formatter) legacyJSON(diff digest.Differences) error {
 		Deletions     []string
 	}
 
-	includes := f.config.GetIncludeColumnPositions()
+	includes := f.ctx.GetIncludeColumnPositions()
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
@@ -99,7 +99,7 @@ func (f *Formatter) legacyJSON(diff digest.Differences) error {
 // JSONFormatter formats diff to as a JSON Object
 // { "Additions": [...], "Modifications": [{ "Original": [...], "Current": [...]}]}
 func (f *Formatter) json(diff digest.Differences) error {
-	includes := f.config.GetIncludeColumnPositions()
+	includes := f.ctx.GetIncludeColumnPositions()
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
@@ -151,7 +151,7 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 	_, _ = fmt.Fprintf(f.stderr, "Deletions %d\n", len(diff.Deletions))
 	_, _ = fmt.Fprintf(f.stderr, "Rows:\n")
 
-	includes := f.config.GetIncludeColumnPositions()
+	includes := f.ctx.GetIncludeColumnPositions()
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
@@ -185,7 +185,7 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 
 // lineDiff is git-style line diff
 func (f *Formatter) lineDiff(diff digest.Differences) error {
-	includes := f.config.GetIncludeColumnPositions()
+	includes := f.ctx.GetIncludeColumnPositions()
 
 	blue := color.New(color.FgBlue).FprintfFunc()
 	red := color.New(color.FgRed).FprintfFunc()
@@ -219,9 +219,9 @@ func (f *Formatter) colorWords(diff digest.Differences) error {
 }
 
 func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, additionFormat string) error {
-	includes := f.config.GetIncludeColumnPositions()
+	includes := f.ctx.GetIncludeColumnPositions()
 	if len(includes) <= 0 {
-		includes = f.config.GetValueColumns()
+		includes = f.ctx.GetValueColumns()
 	}
 	blue := color.New(color.FgBlue).SprintfFunc()
 	red := color.New(color.FgRed).SprintfFunc()
