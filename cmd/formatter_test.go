@@ -1,10 +1,9 @@
-package cmd_test
+package cmd
 
 import (
 	"bytes"
 	"testing"
 
-	"github.com/aswinkarthik/csvdiff/cmd"
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 
 	"github.com/stretchr/testify/assert"
@@ -31,7 +30,7 @@ func TestLegacyJSONFormat(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "legacy-json"})
+	formatter := NewFormatter(&stdout, &stderr, Context{format: "legacy-json"})
 
 	err := formatter.Format(diff)
 	assert.NoError(t, err)
@@ -62,7 +61,7 @@ func TestJSONFormat(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "json"})
+	formatter := NewFormatter(&stdout, &stderr, Context{format: "json"})
 
 	err := formatter.Format(diff)
 	assert.NoError(t, err)
@@ -87,7 +86,7 @@ Rows:
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "rowmark"})
+	formatter := NewFormatter(&stdout, &stderr, Context{format: "rowmark"})
 
 	err := formatter.Format(diff)
 
@@ -120,7 +119,7 @@ func TestLineDiff(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "diff"})
+	formatter := NewFormatter(&stdout, &stderr, Context{format: "diff"})
 
 	err := formatter.Format(diff)
 
@@ -148,7 +147,7 @@ func TestWordDiff(t *testing.T) {
 		var stdout bytes.Buffer
 		var stderr bytes.Buffer
 
-		formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "word-diff"})
+		formatter := NewFormatter(&stdout, &stderr, Context{format: "word-diff"})
 
 		err := formatter.Format(diff)
 
@@ -177,9 +176,9 @@ func TestWordDiff(t *testing.T) {
 		var stdout bytes.Buffer
 		var stderr bytes.Buffer
 
-		formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{
-			Format:                 "word-diff",
-			IncludeColumnPositions: digest.Positions{0},
+		formatter := NewFormatter(&stdout, &stderr, Context{
+			format:                 "word-diff",
+			includeColumnPositions: digest.Positions{0},
 		})
 
 		err := formatter.Format(diff)
@@ -209,7 +208,7 @@ deletions
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Context{Format: "color-words"})
+	formatter := NewFormatter(&stdout, &stderr, Context{format: "color-words"})
 
 	err := formatter.Format(diff)
 
@@ -220,7 +219,7 @@ deletions
 
 func TestWrongFormatter(t *testing.T) {
 	diff := digest.Differences{}
-	formatter := cmd.NewFormatter(nil, nil, cmd.Context{Format: "random-str"})
+	formatter := NewFormatter(nil, nil, Context{format: "random-str"})
 
 	err := formatter.Format(diff)
 
