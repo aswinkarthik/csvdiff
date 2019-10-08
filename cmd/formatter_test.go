@@ -130,30 +130,65 @@ func TestLineDiff(t *testing.T) {
 }
 
 func TestWordDiff(t *testing.T) {
-	diff := digest.Differences{
-		Additions:     []digest.Addition{[]string{"additions"}},
-		Modifications: []digest.Modification{{Original: []string{"original"}, Current: []string{"modification"}}},
-		Deletions:     []digest.Deletion{{"deletions"}},
-	}
-	expectedStdout := `{+additions+}
+	t.Run("should cover single column happy path", func(t *testing.T) {
+		diff := digest.Differences{
+			Additions:     []digest.Addition{[]string{"additions"}},
+			Modifications: []digest.Modification{{Original: []string{"original"}, Current: []string{"modification"}}},
+			Deletions:     []digest.Deletion{{"deletions"}},
+		}
+		expectedStdout := `{+additions+}
 [-original-]{+modification+}
 [-deletions-]
 `
-	expectedStderr := `# Additions (1)
+		expectedStderr := `# Additions (1)
 # Modifications (1)
 # Deletions (1)
 `
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
+		var stdout bytes.Buffer
+		var stderr bytes.Buffer
 
-	formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "word-diff"})
+		formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{Format: "word-diff"})
 
-	err := formatter.Format(diff)
+		err := formatter.Format(diff)
 
-	assert.NoError(t, err)
-	assert.Equal(t, expectedStdout, stdout.String())
-	assert.Equal(t, expectedStderr, stderr.String())
+		assert.NoError(t, err)
+		assert.Equal(t, expectedStdout, stdout.String())
+		assert.Equal(t, expectedStderr, stderr.String())
+	})
+
+	t.Run("should ouput only selective columns", func(t *testing.T) {
+		diff := digest.Differences{
+			Additions: []digest.Addition{[]string{"additions", "ignored-column"}},
+			Modifications: []digest.Modification{
+				{Original: []string{"original", "ignored-column"}, Current: []string{"modification", "ignored-column"}},
+			},
+			Deletions: []digest.Deletion{{"deletions", "ignored-column"}},
+		}
+		expectedStdout := `{+additions+}
+[-original-]{+modification+}
+[-deletions-]
+`
+		expectedStderr := `# Additions (1)
+# Modifications (1)
+# Deletions (1)
+`
+
+		var stdout bytes.Buffer
+		var stderr bytes.Buffer
+
+		formatter := cmd.NewFormatter(&stdout, &stderr, cmd.Config{
+			Format:                 "word-diff",
+			IncludeColumnPositions: digest.Positions{0},
+		})
+
+		err := formatter.Format(diff)
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedStdout, stdout.String())
+		assert.Equal(t, expectedStderr, stderr.String())
+
+	})
 }
 
 func TestColorWords(t *testing.T) {

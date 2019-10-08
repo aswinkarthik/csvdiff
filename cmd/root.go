@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"io"
 	"os"
 	"strings"
@@ -37,8 +38,10 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "csvdiff <base-csv> <delta-csv>",
-	Short: "A diff tool for database tables dumped as csv files",
+	Use:           "csvdiff <base-csv> <delta-csv>",
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	Short:         "A diff tool for database tables dumped as csv files",
 	Long: `Differentiates two csv files and finds out the additions and modifications.
 Most suitable for csv files created from database tables`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -55,14 +58,9 @@ Most suitable for csv files created from database tables`,
 			return err
 		}
 
-		// Validate flags
-		if err := config.Validate(); err != nil {
-			return err
-		}
-
 		return nil
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if timed {
 			defer timeTrack(time.Now(), "csvdiff")
 		}
@@ -72,30 +70,37 @@ Most suitable for csv files created from database tables`,
 		deltaFile := newReadCloser(args[1])
 		defer deltaFile.Close()
 
+		config := Config{
+			IncludeColumnPositions: includeColumnPositions,
+			Format:                 format,
+			PrimaryKeyPositions:    primaryKeyPositions,
+			ValueColumnPositions:   valueColumnPositions,
+		}
+
+		if err := config.Validate(); err != nil {
+			return err
+		}
+
 		baseConfig := digest.NewConfig(
 			baseFile,
-			config.GetPrimaryKeys(),
-			config.GetValueColumns(),
-			config.GetIncludeColumnPositions(),
+			primaryKeyPositions,
+			valueColumnPositions,
+			includeColumnPositions,
 		)
 		deltaConfig := digest.NewConfig(
 			deltaFile,
-			config.GetPrimaryKeys(),
-			config.GetValueColumns(),
-			config.GetIncludeColumnPositions(),
+			primaryKeyPositions,
+			valueColumnPositions,
+			includeColumnPositions,
 		)
 
 		diff, err := digest.Diff(*baseConfig, *deltaConfig)
 
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "csvdiff failed: %v\n", err)
-			os.Exit(2)
+			return err
 		}
 
-		if err := NewFormatter(os.Stdout, os.Stderr, config).Format(diff); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "csvdiff failed: %v\n", err)
-			os.Exit(3)
-		}
+		return NewFormatter(os.Stdout, os.Stderr, config).Format(diff)
 	},
 }
 
@@ -122,18 +127,26 @@ func isValidFile(path string) error {
 func Execute() {
 	rootCmd.Version = Version()
 	if err := rootCmd.Execute(); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
+		_, _ = fmt.Fprint(os.Stderr, color.RedString("csvdiff: command failed - %v\n\n", err))
+		_ = rootCmd.Help()
 		os.Exit(1)
 	}
 }
 
+var (
+	primaryKeyPositions    []int
+	valueColumnPositions   []int
+	includeColumnPositions []int
+	format                 string
+)
+
 func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	rootCmd.Flags().IntSliceVarP(&config.PrimaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
-	rootCmd.Flags().IntSliceVarP(&config.ValueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
-	rootCmd.Flags().IntSliceVarP(&config.IncludeColumnPositions, "include", "", []int{}, "Include positions in CSV to display Eg: 1,2. Default is entire row")
-	rootCmd.Flags().StringVarP(&config.Format, "format", "o", "diff", fmt.Sprintf("Available (%s)", strings.Join(allFormats, "|")))
+	rootCmd.Flags().IntSliceVarP(&primaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
+	rootCmd.Flags().IntSliceVarP(&valueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
+	rootCmd.Flags().IntSliceVarP(&includeColumnPositions, "include", "", []int{}, "Include positions in CSV to display Eg: 1,2. Default is entire row")
+	rootCmd.Flags().StringVarP(&format, "format", "o", "diff", fmt.Sprintf("Available (%s)", strings.Join(allFormats, "|")))
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
 }

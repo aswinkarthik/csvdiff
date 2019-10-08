@@ -63,7 +63,7 @@ func (f *Formatter) legacyJSON(diff digest.Differences) error {
 		Deletions     []string
 	}
 
-	includes := config.GetIncludeColumnPositions()
+	includes := f.config.GetIncludeColumnPositions()
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
@@ -99,7 +99,7 @@ func (f *Formatter) legacyJSON(diff digest.Differences) error {
 // JSONFormatter formats diff to as a JSON Object
 // { "Additions": [...], "Modifications": [{ "Original": [...], "Current": [...]}]}
 func (f *Formatter) json(diff digest.Differences) error {
-	includes := config.GetIncludeColumnPositions()
+	includes := f.config.GetIncludeColumnPositions()
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
@@ -151,7 +151,7 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 	_, _ = fmt.Fprintf(f.stderr, "Deletions %d\n", len(diff.Deletions))
 	_, _ = fmt.Fprintf(f.stderr, "Rows:\n")
 
-	includes := config.GetIncludeColumnPositions()
+	includes := f.config.GetIncludeColumnPositions()
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
@@ -185,7 +185,7 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 
 // lineDiff is git-style line diff
 func (f *Formatter) lineDiff(diff digest.Differences) error {
-	includes := config.GetIncludeColumnPositions()
+	includes := f.config.GetIncludeColumnPositions()
 
 	blue := color.New(color.FgBlue).FprintfFunc()
 	red := color.New(color.FgRed).FprintfFunc()
@@ -219,9 +219,9 @@ func (f *Formatter) colorWords(diff digest.Differences) error {
 }
 
 func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, additionFormat string) error {
-	includes := config.GetIncludeColumnPositions()
+	includes := f.config.GetIncludeColumnPositions()
 	if len(includes) <= 0 {
-		includes = config.GetValueColumns()
+		includes = f.config.GetValueColumns()
 	}
 	blue := color.New(color.FgBlue).SprintfFunc()
 	red := color.New(color.FgRed).SprintfFunc()
@@ -244,7 +244,7 @@ func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, addi
 				result = append(result, modification.Current[i])
 			}
 		}
-		_, _ = fmt.Fprintln(f.stdout, digest.Positions{}.String(result))
+		_, _ = fmt.Fprintln(f.stdout, includes.String(result))
 	}
 
 	_, _ = fmt.Fprintln(f.stderr, blue("# Deletions (%d)", len(diff.Deletions)))
