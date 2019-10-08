@@ -23,6 +23,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/spf13/afero"
 	"io"
 	"os"
 	"strings"
@@ -64,20 +65,36 @@ Most suitable for csv files created from database tables`,
 		if timed {
 			defer timeTrack(time.Now(), "csvdiff")
 		}
+		fs := afero.NewOsFs()
 
-		baseFile := newReadCloser(args[0])
-		defer baseFile.Close()
-		deltaFile := newReadCloser(args[1])
-		defer deltaFile.Close()
+		baseFilename := args[0]
+		deltaFilename := args[1]
+
+		baseFile, err := newReadCloser(baseFilename)
+		if err != nil {
+			return fmt.Errorf("error opening base-file %s: %v", baseFilename, err)
+		}
+
+		deltaFile, err := newReadCloser(deltaFilename)
+		if err != nil {
+			return fmt.Errorf("error opening delta-file %s: %v", deltaFilename, err)
+		}
+
+		defer func() {
+			_ = baseFile.Close()
+			_ = deltaFile.Close()
+		}()
 
 		config := Config{
 			IncludeColumnPositions: includeColumnPositions,
 			Format:                 format,
 			PrimaryKeyPositions:    primaryKeyPositions,
 			ValueColumnPositions:   valueColumnPositions,
+			BaseFilename:           baseFilename,
+			DeltaFilename:          deltaFilename,
 		}
 
-		if err := config.Validate(); err != nil {
+		if err := config.Validate(fs); err != nil {
 			return err
 		}
 
@@ -151,16 +168,16 @@ func init() {
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
 }
 
-func newReadCloser(filename string) io.ReadCloser {
+func newReadCloser(filename string) (io.ReadCloser, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return file
+	return file, nil
 }
 
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
-	fmt.Fprintln(os.Stderr, fmt.Sprintf("%s took %s", name, elapsed))
+	_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf("%s took %s", name, elapsed))
 }

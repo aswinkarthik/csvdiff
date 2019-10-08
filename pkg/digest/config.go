@@ -8,7 +8,6 @@ import "io"
 // Key: The primary key positions
 // Value: The Value positions that needs to be compared for diff
 // Include: Include these positions in output. It is Value positions by default.
-// KeepSource: return the source and target string if diff is computed
 type Config struct {
 	Key     Positions
 	Value   Positions
