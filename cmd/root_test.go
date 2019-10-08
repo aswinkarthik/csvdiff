@@ -32,18 +32,22 @@ func TestRunContext(t *testing.T) {
 			assert.NoError(t, err)
 		}
 
-		ctx := Context{
-			Format:                 "json",
-			BaseFilename:           "/base.csv",
-			DeltaFilename:          "/delta.csv",
-			PrimaryKeyPositions:    digest.Positions{0},
-			ValueColumnPositions:   digest.Positions{1, 2},
-			IncludeColumnPositions: digest.Positions{0, 1, 2},
-		}
+		ctx, err := NewContext(
+			fs,
+			digest.Positions{0},
+			digest.Positions{1, 2},
+			nil,
+			digest.Positions{0, 1, 2},
+			"json",
+			"/base.csv",
+			"/delta.csv",
+		)
+		assert.NoError(t, err)
+
 		outStream := &bytes.Buffer{}
 		errStream := &bytes.Buffer{}
 
-		err := runContext(ctx, fs, outStream, errStream)
+		err = runContext(ctx, outStream, errStream)
 		expected := `{
   "Additions": [
     "1,caprio,3"

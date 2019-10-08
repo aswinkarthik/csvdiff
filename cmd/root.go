@@ -46,7 +46,7 @@ var rootCmd = &cobra.Command{
 	Long: `Differentiates two csv files and finds out the additions and modifications.
 Most suitable for csv files created from database tables`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		// Validate args
+		// validate args
 		if len(args) != 2 {
 			return fmt.Errorf("pass 2 files. Usage: csvdiff <base-csv> <delta-csv>")
 		}
@@ -61,35 +61,33 @@ Most suitable for csv files created from database tables`,
 		baseFilename := args[0]
 		deltaFilename := args[1]
 
-		ctx := Context{
-			IncludeColumnPositions: includeColumnPositions,
-			Format:                 format,
-			PrimaryKeyPositions:    primaryKeyPositions,
-			ValueColumnPositions:   valueColumnPositions,
-			BaseFilename:           baseFilename,
-			DeltaFilename:          deltaFilename,
+		ctx, err := NewContext(
+			fs,
+			primaryKeyPositions,
+			valueColumnPositions,
+			ignoreValueColumnPositions,
+			includeColumnPositions,
+			format,
+			baseFilename,
+			deltaFilename,
+		)
+
+		if err != nil {
+			return err
 		}
 
-		return runContext(ctx, fs, os.Stdout, os.Stderr)
+		return runContext(ctx, os.Stdout, os.Stderr)
 	},
 }
 
-func runContext(
-	ctx Context,
-	fs afero.Fs,
-	outputStream,
-	errorStream io.Writer) error {
-	if err := ctx.Validate(fs); err != nil {
-		return err
-	}
-
-	baseConfig, err := ctx.BaseDigestConfig(fs)
+func runContext(ctx *Context, outputStream, errorStream io.Writer) error {
+	baseConfig, err := ctx.BaseDigestConfig()
 	if err != nil {
-		return fmt.Errorf("error opening base-file %s: %v", ctx.BaseFilename, err)
+		return fmt.Errorf("error opening base-file %s: %v", ctx.baseFilename, err)
 	}
-	deltaConfig, err := ctx.DeltaDigestConfig(fs)
+	deltaConfig, err := ctx.DeltaDigestConfig()
 	if err != nil {
-		return fmt.Errorf("error opening delta-file %s: %v", ctx.DeltaFilename, err)
+		return fmt.Errorf("error opening delta-file %s: %v", ctx.deltaFilename, err)
 	}
 	defer ctx.Close()
 
@@ -99,7 +97,7 @@ func runContext(
 		return err
 	}
 
-	return NewFormatter(outputStream, errorStream, ctx).Format(diff)
+	return NewFormatter(outputStream, errorStream, *ctx).Format(diff)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -114,10 +112,11 @@ func Execute() {
 }
 
 var (
-	primaryKeyPositions    []int
-	valueColumnPositions   []int
-	includeColumnPositions []int
-	format                 string
+	primaryKeyPositions        []int
+	valueColumnPositions       []int
+	ignoreValueColumnPositions []int
+	includeColumnPositions     []int
+	format                     string
 )
 
 func init() {
@@ -125,6 +124,7 @@ func init() {
 
 	rootCmd.Flags().IntSliceVarP(&primaryKeyPositions, "primary-key", "p", []int{0}, "Primary key positions of the Input CSV as comma separated values Eg: 1,2")
 	rootCmd.Flags().IntSliceVarP(&valueColumnPositions, "columns", "", []int{}, "Selectively compare positions in CSV Eg: 1,2. Default is entire row")
+	rootCmd.Flags().IntSliceVarP(&ignoreValueColumnPositions, "ignore-columns", "", []int{}, "Inverse of --columns flag. This cannot be used if --columns are specified")
 	rootCmd.Flags().IntSliceVarP(&includeColumnPositions, "include", "", []int{}, "Include positions in CSV to display Eg: 1,2. Default is entire row")
 	rootCmd.Flags().StringVarP(&format, "format", "o", "diff", fmt.Sprintf("Available (%s)", strings.Join(allFormats, "|")))
 

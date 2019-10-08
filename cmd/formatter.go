@@ -35,7 +35,7 @@ func NewFormatter(stdout, stderr io.Writer, ctx Context) *Formatter {
 // Format can be used to format the differences based on ctx
 // to appropriate writers
 func (f *Formatter) Format(diff digest.Differences) error {
-	switch f.ctx.Format {
+	switch f.ctx.format {
 	case legacyJSONFormat:
 		return f.legacyJSON(diff)
 	case jsonFormat:
