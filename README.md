@@ -14,9 +14,11 @@ A fast diff tool for comparing csv files.
 Csvdiff is a difftool to compute changes between two csv files.
 
 - It is not a traditional diff tool. It is **most suitable** for comparing csv files dumped from **database tables**. GNU diff tool is orders of magnitude faster on comparing line by line.
-- Supports specifying group of columns as primary-key.
 - Supports selective comparison of fields in a row.
+- Supports specifying group of columns as primary-key i.e uniquely identify a row.
+- Support ignoring columns e.g ignore columns like `created_at` timestamps.
 - Compares csvs of million records csv in under 2 seconds.
+- Supports lot of output formats e.g colored git style output or JSON for post-processing.
 
 ## Why?
 
@@ -41,18 +43,22 @@ $ csvdiff base.csv delta.csv
 
 
 ```bash
+Differentiates two csv files and finds out the additions and modifications.
+Most suitable for csv files created from database tables
+
 Usage:
   csvdiff <base-csv> <delta-csv> [flags]
 
 Flags:
-      --columns ints       Selectively compare positions in CSV Eg: 1,2. Default is entire row
-  -o, --format string      Available (rowmark|json|legacy-json|diff|word-diff|color-words) (default "diff")
-  -h, --help               help for csvdiff
-      --include ints       Include positions in CSV to display Eg: 1,2. Default is entire row
-  -p, --primary-key ints   Primary key positions of the Input CSV as comma separated values Eg: 1,2 (default [0])
-      --time               Measure time
-  -t, --toggle             Help message for toggle
-      --version            version for csvdiff
+      --columns ints          Selectively compare positions in CSV Eg: 1,2. Default is entire row
+  -o, --format string         Available (rowmark|json|legacy-json|diff|word-diff|color-words) (default "diff")
+  -h, --help                  help for csvdiff
+      --ignore-columns ints   Inverse of --columns flag. This cannot be used if --columns are specified
+      --include ints          Include positions in CSV to display Eg: 1,2. Default is entire row
+  -p, --primary-key ints      Primary key positions of the Input CSV as comma separated values Eg: 1,2 (default [0])
+      --time                  Measure time
+  -t, --toggle                Help message for toggle
+      --version               version for csvdiff
 ```
 
 ## Installation
