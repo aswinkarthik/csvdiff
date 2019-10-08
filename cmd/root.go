@@ -75,6 +75,7 @@ Most suitable for csv files created from database tables`,
 		if err != nil {
 			return err
 		}
+		defer ctx.Close()
 
 		return runContext(ctx, os.Stdout, os.Stderr)
 	},
