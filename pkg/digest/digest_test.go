@@ -18,10 +18,10 @@ func TestCreateDigestWithSource(t *testing.T) {
 	expectedDigest := digest.Digest{
 		Key:    firstKey,
 		Value:  firstLineDigest,
-		Source: strings.Split(firstLine, ","),
+		Source: strings.Split(firstLine, comma),
 	}
 
-	actualDigest := digest.CreateDigest(strings.Split(firstLine, digest.Separator), []int{0}, []int{})
+	actualDigest := digest.CreateDigest(strings.Split(firstLine, comma), comma, []int{0}, []int{})
 
 	assert.Equal(t, expectedDigest, actualDigest)
 }
@@ -39,8 +39,9 @@ func TestDigestForFile(t *testing.T) {
 
 	t.Run("should create digest for given key and all values", func(t *testing.T) {
 		testConfig := &digest.Config{
-			Reader: strings.NewReader(firstLine + "\n" + secondLine),
-			Key:    []int{0},
+			Reader:    strings.NewReader(firstLine + "\n" + secondLine),
+			Key:       []int{0},
+			Separator: ',',
 		}
 
 		actualDigest, sourceMap, err := digest.Create(testConfig)
@@ -54,9 +55,10 @@ func TestDigestForFile(t *testing.T) {
 
 	t.Run("should create digest for given key and given values", func(t *testing.T) {
 		testConfig := &digest.Config{
-			Reader: strings.NewReader(firstLine + "\n" + secondLine),
-			Key:    []int{0},
-			Value:  []int{3},
+			Reader:    strings.NewReader(firstLine + "\n" + secondLine),
+			Key:       []int{0},
+			Value:     []int{3},
+			Separator: ',',
 		}
 
 		actualDigest, _, err := digest.Create(testConfig)
@@ -68,9 +70,10 @@ func TestDigestForFile(t *testing.T) {
 
 	t.Run("should return ParseError if csv reading fails", func(t *testing.T) {
 		testConfig := &digest.Config{
-			Reader: strings.NewReader(firstLine + "\n" + "some-random-line"),
-			Key:    []int{0},
-			Value:  []int{3},
+			Reader:    strings.NewReader(firstLine + "\n" + "some-random-line"),
+			Key:       []int{0},
+			Value:     []int{3},
+			Separator: ',',
 		}
 
 		actualDigest, _, err := digest.Create(testConfig)
@@ -91,24 +94,26 @@ func TestNewConfig(t *testing.T) {
 	include := digest.Positions{0, 1}
 
 	t.Run("should create config from given params", func(t *testing.T) {
-		conf := digest.NewConfig(r, primaryColumns, values, include)
+		conf := digest.NewConfig(r, primaryColumns, values, include, ',')
 		expectedConf := digest.Config{
-			Reader:  r,
-			Key:     primaryColumns,
-			Value:   values,
-			Include: include,
+			Reader:    r,
+			Key:       primaryColumns,
+			Value:     values,
+			Include:   include,
+			Separator: ',',
 		}
 
 		assert.Equal(t, expectedConf, *conf)
 	})
 
 	t.Run("should use valueColumns as includeColumns for includes not specified", func(t *testing.T) {
-		conf := digest.NewConfig(r, primaryColumns, values, nil)
+		conf := digest.NewConfig(r, primaryColumns, values, nil, ',')
 		expectedConf := digest.Config{
-			Reader:  r,
-			Key:     primaryColumns,
-			Value:   values,
-			Include: values,
+			Reader:    r,
+			Key:       primaryColumns,
+			Value:     values,
+			Include:   values,
+			Separator: ',',
 		}
 
 		assert.Equal(t, expectedConf, *conf)

@@ -8,9 +8,6 @@ import (
 	"github.com/cespare/xxhash"
 )
 
-// Separator for CSV. Not configurable for now.
-const Separator = ","
-
 // Digest represents the binding of the key of each csv line
 // and the digest that gets created for the entire line
 type Digest struct {
@@ -21,9 +18,9 @@ type Digest struct {
 
 // CreateDigest creates a Digest for each line of csv.
 // There will be one Digest per line
-func CreateDigest(csv []string, pKey Positions, pRow Positions) Digest {
-	key := xxhash.Sum64String(pKey.Join(csv))
-	digest := xxhash.Sum64String(pRow.Join(csv))
+func CreateDigest(csv []string, separator string, pKey Positions, pRow Positions) Digest {
+	key := xxhash.Sum64String(pKey.Join(csv, separator))
+	digest := xxhash.Sum64String(pRow.Join(csv, separator))
 
 	return Digest{Key: key, Value: digest, Source: csv}
 }
@@ -36,7 +33,7 @@ const bufferSize = 512
 func Create(config *Config) (map[uint64]uint64, map[uint64][]string, error) {
 	maxProcs := runtime.NumCPU()
 	reader := csv.NewReader(config.Reader)
-
+	reader.Comma = config.Separator
 	output := make(map[uint64]uint64)
 	sourceMap := make(map[uint64][]string)
 
@@ -89,8 +86,9 @@ func createDigestForNLines(lines [][]string,
 	wg *sync.WaitGroup,
 ) {
 	output := make([]Digest, len(lines))
+	separator := string(config.Separator)
 	for i, line := range lines {
-		output[i] = CreateDigest(line, config.Key, config.Value)
+		output[i] = CreateDigest(line, separator, config.Key, config.Value)
 	}
 
 	digestChannel <- output

@@ -10,16 +10,16 @@ type Positions []int
 
 // Join plucks the values from CSV from
 // their respective positions and concatenates
-// them using Separator as a string.
-func (p Positions) Join(csv []string) string {
+// them using separator as a string.
+func (p Positions) Join(csv []string, separator string) string {
 	if len(p) == 0 {
-		return strings.Join(csv, Separator)
+		return strings.Join(csv, separator)
 	}
 
 	csvStr := strings.Builder{}
 	for _, pos := range p[:len(p)-1] {
 		csvStr.WriteString(csv[pos])
-		csvStr.WriteString(Separator)
+		csvStr.WriteString(separator)
 	}
 	csvStr.WriteString(csv[p[len(p)-1]])
 	return csvStr.String()

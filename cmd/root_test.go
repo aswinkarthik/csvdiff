@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"bytes"
+	"os"
+	"testing"
+
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 func TestRunContext(t *testing.T) {
@@ -41,6 +42,7 @@ func TestRunContext(t *testing.T) {
 			"json",
 			"/base.csv",
 			"/delta.csv",
+			',',
 		)
 		assert.NoError(t, err)
 

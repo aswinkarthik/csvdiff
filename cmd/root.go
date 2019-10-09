@@ -22,12 +22,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/afero"
 	"io"
 	"os"
 	"strings"
 	"time"
+	"unicode/utf8"
+
+	"github.com/fatih/color"
+	"github.com/spf13/afero"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/spf13/cobra"
@@ -60,7 +62,12 @@ Most suitable for csv files created from database tables`,
 		fs := afero.NewOsFs()
 		baseFilename := args[0]
 		deltaFilename := args[1]
+		runeSeparator, err := parseSeparator(separator)
+		fmt.Printf("root.go ####### %c, %q\n", runeSeparator, runeSeparator)
 
+		if err != nil {
+			return err
+		}
 		ctx, err := NewContext(
 			fs,
 			primaryKeyPositions,
@@ -70,6 +77,7 @@ Most suitable for csv files created from database tables`,
 			format,
 			baseFilename,
 			deltaFilename,
+			runeSeparator,
 		)
 
 		if err != nil {
@@ -118,6 +126,7 @@ var (
 	ignoreValueColumnPositions []int
 	includeColumnPositions     []int
 	format                     string
+	separator                  string
 )
 
 func init() {
@@ -128,6 +137,7 @@ func init() {
 	rootCmd.Flags().IntSliceVarP(&ignoreValueColumnPositions, "ignore-columns", "", []int{}, "Inverse of --columns flag. This cannot be used if --columns are specified")
 	rootCmd.Flags().IntSliceVarP(&includeColumnPositions, "include", "", []int{}, "Include positions in CSV to display Eg: 1,2. Default is entire row")
 	rootCmd.Flags().StringVarP(&format, "format", "o", "diff", fmt.Sprintf("Available (%s)", strings.Join(allFormats, "|")))
+	rootCmd.Flags().StringVarP(&separator, "separator", "s", ",", "use specific separator")
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
 }
@@ -135,4 +145,18 @@ func init() {
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
 	_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf("%s took %s", name, elapsed))
+}
+
+func parseSeparator(sep string) (rune, error) {
+
+	if strings.HasPrefix(sep, "\\t") {
+		return '\t', nil
+	}
+
+	runesep, _ := utf8.DecodeRuneInString(sep)
+	if runesep == utf8.RuneError {
+		return ' ', fmt.Errorf("Unable to use %v (%q) as a separator", separator, separator)
+	}
+
+	return runesep, nil
 }

@@ -2,6 +2,7 @@ package digest
 
 import (
 	"encoding/csv"
+	"fmt"
 	"runtime"
 	"sync"
 )
@@ -59,7 +60,8 @@ func (e Engine) StreamDigests() (chan []Digest, chan error) {
 	go func(digestChannel chan []Digest, errorChannel chan error) {
 		wg := &sync.WaitGroup{}
 		reader := csv.NewReader(e.config.Reader)
-
+		reader.Comma = e.config.Separator
+		fmt.Printf("engine.go ####### %c, %q\n", e.config.Separator, e.config.Separator)
 		for {
 			lines, eofReached, err := getNextNLines(reader)
 
@@ -90,8 +92,9 @@ func (e Engine) StreamDigests() (chan []Digest, chan error) {
 
 func (e Engine) digestForLines(lines [][]string, digestChannel chan []Digest, wg *sync.WaitGroup) {
 	output := make([]Digest, 0, len(lines))
+	separator := string(e.config.Separator)
 	for _, line := range lines {
-		output = append(output, CreateDigest(line, e.config.Key, e.config.Value))
+		output = append(output, CreateDigest(line, separator, e.config.Key, e.config.Value))
 	}
 
 	digestChannel <- output

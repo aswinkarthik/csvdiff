@@ -8,12 +8,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const comma = ","
+
 func TestPositions_MapValues(t *testing.T) {
 	t.Run("should map positions to string", func(t *testing.T) {
 		positions := digest.Positions([]int{0, 3})
 		csv := []string{"zero", "one", "two", "three"}
 
-		actual := positions.Join(csv)
+		actual := positions.Join(csv, comma)
 		expected := "zero,three"
 
 		assert.Equal(t, expected, actual)
@@ -23,8 +25,8 @@ func TestPositions_MapValues(t *testing.T) {
 		positions := digest.Positions([]int{})
 		csv := []string{"zero", "one", "two", "three"}
 
-		actual := positions.Join(csv)
-		expected := strings.Join(csv, digest.Separator)
+		actual := positions.Join(csv, comma)
+		expected := strings.Join(csv, comma)
 
 		assert.Equal(t, expected, actual)
 	})
@@ -33,7 +35,7 @@ func TestPositions_MapValues(t *testing.T) {
 		positions := digest.Positions([]int{0, 3})
 		csv := []string{"zero\n", "one", "two", "three,3"}
 
-		actual := positions.Join(csv)
+		actual := positions.Join(csv, comma)
 		expected := "zero\n,three,3"
 
 		assert.Equal(t, expected, actual)
@@ -56,7 +58,7 @@ func TestPositions_String(t *testing.T) {
 		csv := []string{"zero", "one", "two", "three"}
 
 		actual := positions.String(csv)
-		expected := strings.Join(csv, digest.Separator)
+		expected := strings.Join(csv, comma)
 
 		assert.Equal(t, expected, actual)
 	})
