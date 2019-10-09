@@ -63,8 +63,6 @@ Most suitable for csv files created from database tables`,
 		baseFilename := args[0]
 		deltaFilename := args[1]
 		runeSeparator, err := parseSeparator(separator)
-		fmt.Printf("root.go ####### %c, %q\n", runeSeparator, runeSeparator)
-
 		if err != nil {
 			return err
 		}
