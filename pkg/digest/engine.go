@@ -2,7 +2,6 @@ package digest
 
 import (
 	"encoding/csv"
-	"fmt"
 	"runtime"
 	"sync"
 )
@@ -61,7 +60,6 @@ func (e Engine) StreamDigests() (chan []Digest, chan error) {
 		wg := &sync.WaitGroup{}
 		reader := csv.NewReader(e.config.Reader)
 		reader.Comma = e.config.Separator
-		fmt.Printf("engine.go ####### %c, %q\n", e.config.Separator, e.config.Separator)
 		for {
 			lines, eofReached, err := getNextNLines(reader)
 
