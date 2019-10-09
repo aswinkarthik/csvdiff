@@ -24,13 +24,15 @@ func TestDiff(t *testing.T) {
 
 	t.Run("default config", func(t *testing.T) {
 		baseConfig := &digest.Config{
-			Reader: strings.NewReader(base),
-			Key:    []int{0},
+			Reader:    strings.NewReader(base),
+			Key:       []int{0},
+			Separator: ',',
 		}
 
 		deltaConfig := &digest.Config{
-			Reader: strings.NewReader(delta),
-			Key:    []int{0},
+			Reader:    strings.NewReader(delta),
+			Key:       []int{0},
+			Separator: ',',
 		}
 
 		expected := digest.Differences{

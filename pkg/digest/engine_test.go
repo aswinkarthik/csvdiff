@@ -23,8 +23,9 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 
 	t.Run("should create digest for given key and all values", func(t *testing.T) {
 		conf := digest.Config{
-			Reader: strings.NewReader(firstLine + "\n" + secondLine),
-			Key:    []int{0},
+			Reader:    strings.NewReader(firstLine + "\n" + secondLine),
+			Key:       []int{0},
+			Separator: ',',
 		}
 
 		engine := digest.NewEngine(conf)
@@ -45,8 +46,9 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 
 	t.Run("should create digest skeeping source", func(t *testing.T) {
 		conf := digest.Config{
-			Reader: strings.NewReader(firstLine + "\n" + secondLine),
-			Key:    []int{0},
+			Reader:    strings.NewReader(firstLine + "\n" + secondLine),
+			Key:       []int{0},
+			Separator: ',',
 		}
 
 		engine := digest.NewEngine(conf)
@@ -67,9 +69,10 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 
 	t.Run("should create digest for given key and given values", func(t *testing.T) {
 		conf := digest.Config{
-			Reader: strings.NewReader(firstLine + "\n" + secondLine),
-			Key:    []int{0},
-			Value:  []int{3},
+			Reader:    strings.NewReader(firstLine + "\n" + secondLine),
+			Key:       []int{0},
+			Value:     []int{3},
+			Separator: ',',
 		}
 
 		engine := digest.NewEngine(conf)
@@ -90,9 +93,10 @@ func TestEngine_GenerateFileDigest(t *testing.T) {
 
 	t.Run("should return ParseError if csv reading fails", func(t *testing.T) {
 		conf := digest.Config{
-			Reader: strings.NewReader(firstLine + "\n" + "some-random-line"),
-			Key:    []int{0},
-			Value:  []int{3},
+			Reader:    strings.NewReader(firstLine + "\n" + "some-random-line"),
+			Key:       []int{0},
+			Value:     []int{3},
+			Separator: ',',
 		}
 
 		engine := digest.NewEngine(conf)
