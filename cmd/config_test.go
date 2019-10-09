@@ -1,10 +1,11 @@
 package cmd_test
 
 import (
-	"github.com/aswinkarthik/csvdiff/cmd"
-	"github.com/spf13/afero"
 	"os"
 	"testing"
+
+	"github.com/aswinkarthik/csvdiff/cmd"
+	"github.com/spf13/afero"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/stretchr/testify/assert"
@@ -162,7 +163,7 @@ func TestNewContext(t *testing.T) {
 			"/base.csv",
 			"/delta.csv",
 		)
-		assert.EqualError(t, err, "error in base-file: open /base.csv: file does not exist")
+		assert.EqualError(t, err, "error in base-file: open "+string(os.PathSeparator)+"base.csv: file does not exist")
 	})
 
 	t.Run("should validate if base file is a csv file", func(t *testing.T) {
