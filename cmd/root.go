@@ -135,7 +135,7 @@ func init() {
 	rootCmd.Flags().IntSliceVarP(&ignoreValueColumnPositions, "ignore-columns", "", []int{}, "Inverse of --columns flag. This cannot be used if --columns are specified")
 	rootCmd.Flags().IntSliceVarP(&includeColumnPositions, "include", "", []int{}, "Include positions in CSV to display Eg: 1,2. Default is entire row")
 	rootCmd.Flags().StringVarP(&format, "format", "o", "diff", fmt.Sprintf("Available (%s)", strings.Join(allFormats, "|")))
-	rootCmd.Flags().StringVarP(&separator, "separator", "s", ",", "use specific separator")
+	rootCmd.Flags().StringVarP(&separator, "separator", "s", ",", "use specific separator (\\t, or any one character string)")
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
 }
