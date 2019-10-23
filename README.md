@@ -56,6 +56,7 @@ Flags:
       --ignore-columns ints   Inverse of --columns flag. This cannot be used if --columns are specified
       --include ints          Include positions in CSV to display Eg: 1,2. Default is entire row
   -p, --primary-key ints      Primary key positions of the Input CSV as comma separated values Eg: 1,2 (default [0])
+  -s, --separator string      use specific separator (\t, or any one character string) (default ",")
       --time                  Measure time
   -t, --toggle                Help message for toggle
       --version               version for csvdiff
@@ -99,10 +100,10 @@ go get -u github.com/aswinkarthik/csvdiff
 - Additions
 - Modifications
 - Deletions
+- Non comma separators
 
 ## Not Supported
 
-- Non comma separators
 - Cannot be used as a generic difftool. Requires a column to be used as a primary key from the csv.
 
 ## Formats
