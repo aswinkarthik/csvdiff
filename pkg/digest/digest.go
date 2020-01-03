@@ -34,6 +34,7 @@ func Create(config *Config) (map[uint64]uint64, map[uint64][]string, error) {
 	maxProcs := runtime.NumCPU()
 	reader := csv.NewReader(config.Reader)
 	reader.Comma = config.Separator
+	reader.LazyQuotes = config.LazyQuotes
 	output := make(map[uint64]uint64)
 	sourceMap := make(map[uint64][]string)
 

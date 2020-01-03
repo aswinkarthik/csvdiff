@@ -24,6 +24,7 @@ type Context struct {
 	deltaFile              afero.File
 	recordCount            int
 	separator              rune
+	lazyQuotes             bool
 }
 
 // NewContext can take all CLI flags and create a cmd.Context
@@ -39,13 +40,14 @@ func NewContext(
 	baseFilename string,
 	deltaFilename string,
 	separator rune,
+	lazyQuotes bool,
 ) (*Context, error) {
-	baseRecordCount, err := getColumnsCount(fs, baseFilename, separator)
+	baseRecordCount, err := getColumnsCount(fs, baseFilename, separator, lazyQuotes)
 	if err != nil {
 		return nil, fmt.Errorf("error in base-file: %v", err)
 	}
 
-	deltaRecordCount, err := getColumnsCount(fs, deltaFilename, separator)
+	deltaRecordCount, err := getColumnsCount(fs, deltaFilename, separator, lazyQuotes)
 	if err != nil {
 		return nil, fmt.Errorf("error in delta-file: %v", err)
 	}
@@ -81,6 +83,7 @@ func NewContext(
 		deltaFile:              deltaFile,
 		recordCount:            baseRecordCount,
 		separator:              separator,
+		lazyQuotes:             lazyQuotes,
 	}
 
 	if err := ctx.validate(); err != nil {
@@ -178,7 +181,7 @@ func assertAll(elements []int, assertFn func(element int) bool) bool {
 	return true
 }
 
-func getColumnsCount(fs afero.Fs, filename string, separator rune) (int, error) {
+func getColumnsCount(fs afero.Fs, filename string, separator rune, lazyQuotes bool) (int, error) {
 	base, err := fs.Open(filename)
 	if err != nil {
 		return 0, err
@@ -186,6 +189,7 @@ func getColumnsCount(fs afero.Fs, filename string, separator rune) (int, error) 
 	defer base.Close()
 	csvReader := csv.NewReader(base)
 	csvReader.Comma = separator
+	csvReader.LazyQuotes = lazyQuotes
 	record, err := csvReader.Read()
 	if err != nil {
 		if err == io.EOF {
@@ -201,11 +205,12 @@ func getColumnsCount(fs afero.Fs, filename string, separator rune) (int, error) 
 // that is needed to start the diff process
 func (c *Context) BaseDigestConfig() (digest.Config, error) {
 	return digest.Config{
-		Reader:    c.baseFile,
-		Value:     c.valueColumnPositions,
-		Key:       c.primaryKeyPositions,
-		Include:   c.includeColumnPositions,
-		Separator: c.separator,
+		Reader:     c.baseFile,
+		Value:      c.valueColumnPositions,
+		Key:        c.primaryKeyPositions,
+		Include:    c.includeColumnPositions,
+		Separator:  c.separator,
+		LazyQuotes: c.lazyQuotes,
 	}, nil
 }
 
@@ -213,11 +218,12 @@ func (c *Context) BaseDigestConfig() (digest.Config, error) {
 // that is needed to start the diff process
 func (c *Context) DeltaDigestConfig() (digest.Config, error) {
 	return digest.Config{
-		Reader:    c.deltaFile,
-		Value:     c.valueColumnPositions,
-		Key:       c.primaryKeyPositions,
-		Include:   c.includeColumnPositions,
-		Separator: c.separator,
+		Reader:     c.deltaFile,
+		Value:      c.valueColumnPositions,
+		Key:        c.primaryKeyPositions,
+		Include:    c.includeColumnPositions,
+		Separator:  c.separator,
+		LazyQuotes: c.lazyQuotes,
 	}, nil
 }
 

@@ -60,6 +60,7 @@ func (e Engine) StreamDigests() (chan []Digest, chan error) {
 		wg := &sync.WaitGroup{}
 		reader := csv.NewReader(e.config.Reader)
 		reader.Comma = e.config.Separator
+		reader.LazyQuotes = e.config.LazyQuotes
 		for {
 			lines, eofReached, err := getNextNLines(reader)
 

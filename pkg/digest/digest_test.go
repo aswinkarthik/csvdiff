@@ -94,26 +94,28 @@ func TestNewConfig(t *testing.T) {
 	include := digest.Positions{0, 1}
 
 	t.Run("should create config from given params", func(t *testing.T) {
-		conf := digest.NewConfig(r, primaryColumns, values, include, ',')
+		conf := digest.NewConfig(r, primaryColumns, values, include, ',', false)
 		expectedConf := digest.Config{
-			Reader:    r,
-			Key:       primaryColumns,
-			Value:     values,
-			Include:   include,
-			Separator: ',',
+			Reader:     r,
+			Key:        primaryColumns,
+			Value:      values,
+			Include:    include,
+			Separator:  ',',
+			LazyQuotes: false,
 		}
 
 		assert.Equal(t, expectedConf, *conf)
 	})
 
 	t.Run("should use valueColumns as includeColumns for includes not specified", func(t *testing.T) {
-		conf := digest.NewConfig(r, primaryColumns, values, nil, ',')
+		conf := digest.NewConfig(r, primaryColumns, values, nil, ',', false)
 		expectedConf := digest.Config{
-			Reader:    r,
-			Key:       primaryColumns,
-			Value:     values,
-			Include:   values,
-			Separator: ',',
+			Reader:     r,
+			Key:        primaryColumns,
+			Value:      values,
+			Include:    values,
+			Separator:  ',',
+			LazyQuotes: false,
 		}
 
 		assert.Equal(t, expectedConf, *conf)

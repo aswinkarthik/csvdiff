@@ -76,6 +76,7 @@ Most suitable for csv files created from database tables`,
 			baseFilename,
 			deltaFilename,
 			runeSeparator,
+			lazyQuotes,
 		)
 
 		if err != nil {
@@ -125,6 +126,7 @@ var (
 	includeColumnPositions     []int
 	format                     string
 	separator                  string
+	lazyQuotes                 bool
 )
 
 func init() {
@@ -138,6 +140,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&separator, "separator", "s", ",", "use specific separator (\\t, or any one character string)")
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
+	rootCmd.Flags().BoolVarP(&lazyQuotes, "lazyquotes", "", false, "allow unescaped quotes")
 }
 
 func timeTrack(start time.Time, name string) {
