@@ -140,7 +140,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&separator, "separator", "s", ",", "use specific separator (\\t, or any one character string)")
 
 	rootCmd.Flags().BoolVarP(&timed, "time", "", false, "Measure time")
-	rootCmd.Flags().BoolVarP(&lazyQuotes, "lazyquotes", "", false, "allow unescaped quotes")
+	rootCmd.Flags().BoolVar(&lazyQuotes, "lazyquotes", false, "allow unescaped quotes")
 }
 
 func timeTrack(start time.Time, name string) {
