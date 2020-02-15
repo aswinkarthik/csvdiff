@@ -27,10 +27,9 @@ endif
 	$(GOBIN)/golangci-lint  run -v ./...
 
 ## test: Run all tests
-test:
-	@-$(MAKE) -s go-test
+test: go-test
 
-## compile: Compile the binary.
+## compie: Compile the binary.
 compile:
 	@-$(MAKE) -s go-compile
 
