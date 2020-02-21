@@ -14,17 +14,18 @@ builds:
       - linux
     goarch:
       - amd64
-nfpm:
-  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  replacements:
-    amd64: 64-bit
-    386: 32-bit
-    darwin: macOS
-    linux: linux
-  homepage: https://github.com/aswinkarthik/csvdiff
-  maintainer: aswinkarthik
-  description: A Blazingly fast diff tool for comparing csv files.
-  license: MIT
-  formats:
-    - deb
-    - rpm
+nfpms:
+  - file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: macOS
+      linux: linux
+    vendor: aswinkarthik
+    homepage: https://github.com/aswinkarthik/csvdiff
+    maintainer: aswinkarthik
+    description: A Blazingly fast diff tool for comparing csv files.
+    license: MIT
+    formats:
+      - deb
+      - rpm
