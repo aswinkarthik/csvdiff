@@ -47,8 +47,18 @@ func TestPositions_String(t *testing.T) {
 		positions := digest.Positions([]int{0, 3})
 		csv := []string{"zero", "one", "two", "three"}
 
-		actual := positions.String(csv)
+		actual := positions.String(csv, ',')
 		expected := "zero,three"
+
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("should map positions to string using custom separator", func(t *testing.T) {
+		positions := digest.Positions([]int{0, 3})
+		csv := []string{"zero", "one", "two", "three"}
+
+		actual := positions.String(csv, '|')
+		expected := "zero|three"
 
 		assert.Equal(t, expected, actual)
 	})
@@ -57,7 +67,7 @@ func TestPositions_String(t *testing.T) {
 		positions := digest.Positions([]int{})
 		csv := []string{"zero", "one", "two", "three"}
 
-		actual := positions.String(csv)
+		actual := positions.String(csv, ',')
 		expected := strings.Join(csv, comma)
 
 		assert.Equal(t, expected, actual)
@@ -67,7 +77,7 @@ func TestPositions_String(t *testing.T) {
 		positions := digest.Positions([]int{0, 3})
 		csv := []string{"zero\n", "one", "two", "three,3"}
 
-		actual := positions.String(csv)
+		actual := positions.String(csv, ',')
 		expected := "\"zero\n\",\"three,3\""
 
 		assert.Equal(t, expected, actual)

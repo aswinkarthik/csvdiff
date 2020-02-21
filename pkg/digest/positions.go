@@ -27,7 +27,7 @@ func (p Positions) Join(csv []string, separator string) string {
 
 // String method converts to csv mapping to positions
 // escapes necessary characters
-func (p Positions) String(csv []string) string {
+func (p Positions) String(csv []string, separator rune) string {
 	selectiveCsv := csv
 	if len(p) != 0 {
 		selectiveCsv = make([]string, 0, len(p))
@@ -38,6 +38,7 @@ func (p Positions) String(csv []string) string {
 
 	csvStr := strings.Builder{}
 	w := csvlib.NewWriter(&csvStr)
+	w.Comma = separator
 	_ = w.Write(selectiveCsv)
 	w.Flush()
 	csvWithNewLine := csvStr.String()

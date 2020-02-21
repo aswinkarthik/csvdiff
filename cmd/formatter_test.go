@@ -96,36 +96,72 @@ Rows:
 }
 
 func TestLineDiff(t *testing.T) {
-	diff := digest.Differences{
-		Additions: []digest.Addition{[]string{"additions"}},
-		Modifications: []digest.Modification{
-			{
-				Original: []string{"original", "comma,separated,value"},
-				Current:  []string{"modification", "comma,separated,value-2"},
+	t.Run("should show line diff with comma by default", func(t *testing.T) {
+		diff := digest.Differences{
+			Additions: []digest.Addition{[]string{"additions"}},
+			Modifications: []digest.Modification{
+				{
+					Original: []string{"original", "comma,separated,value"},
+					Current:  []string{"modification", "comma,separated,value-2"},
+				},
 			},
-		},
-		Deletions: []digest.Deletion{{"deletion", "this-row-was-deleted"}},
-	}
-	expectedStdout := `+ additions
+			Deletions: []digest.Deletion{{"deletion", "this-row-was-deleted"}},
+		}
+		expectedStdout := `+ additions
 - original,"comma,separated,value"
 + modification,"comma,separated,value-2"
 - deletion,this-row-was-deleted
 `
-	expectedStderr := `# Additions (1)
+		expectedStderr := `# Additions (1)
 # Modifications (1)
 # Deletions (1)
 `
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
+		var stdout bytes.Buffer
+		var stderr bytes.Buffer
 
-	formatter := NewFormatter(&stdout, &stderr, Context{format: "diff"})
+		formatter := NewFormatter(&stdout, &stderr, Context{format: "diff"})
 
-	err := formatter.Format(diff)
+		err := formatter.Format(diff)
 
-	assert.NoError(t, err)
-	assert.Equal(t, expectedStdout, stdout.String())
-	assert.Equal(t, expectedStderr, stderr.String())
+		assert.NoError(t, err)
+		assert.Equal(t, expectedStdout, stdout.String())
+		assert.Equal(t, expectedStderr, stderr.String())
+	})
+
+	t.Run("should show line diff with custom separator", func(t *testing.T) {
+		diff := digest.Differences{
+			Additions: []digest.Addition{[]string{"additions"}},
+			Modifications: []digest.Modification{
+				{
+					Original: []string{"original", "comma,separated,value"},
+					Current:  []string{"modification", "comma,separated,value-2"},
+				},
+			},
+			Deletions: []digest.Deletion{{"deletion", "this-row-was-deleted"}},
+		}
+		expectedStdout := `+ additions
+- original|comma,separated,value
++ modification|comma,separated,value-2
+- deletion|this-row-was-deleted
+`
+		expectedStderr := `# Additions (1)
+# Modifications (1)
+# Deletions (1)
+`
+
+		var stdout bytes.Buffer
+		var stderr bytes.Buffer
+
+		formatter := NewFormatter(&stdout, &stderr, Context{format: "diff", separator: '|'})
+
+		err := formatter.Format(diff)
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedStdout, stdout.String())
+		assert.Equal(t, expectedStderr, stderr.String())
+	})
+
 }
 
 func TestWordDiff(t *testing.T) {
