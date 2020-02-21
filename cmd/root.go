@@ -149,14 +149,13 @@ func timeTrack(start time.Time, name string) {
 }
 
 func parseSeparator(sep string) (rune, error) {
-
 	if strings.HasPrefix(sep, "\\t") {
 		return '\t', nil
 	}
 
 	runesep, _ := utf8.DecodeRuneInString(sep)
 	if runesep == utf8.RuneError {
-		return ' ', fmt.Errorf("Unable to use %v (%q) as a separator", separator, separator)
+		return ' ', fmt.Errorf("unable to use %v (%q) as a separator", separator, separator)
 	}
 
 	return runesep, nil
