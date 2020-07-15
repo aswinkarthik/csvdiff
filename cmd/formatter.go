@@ -3,9 +3,10 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/fatih/color"
-	"io"
 )
 
 const (
@@ -15,9 +16,10 @@ const (
 	lineDiff         = "diff"
 	wordDiff         = "word-diff"
 	colorWords       = "color-words"
+	onlyAdded        = "only-added"
 )
 
-var allFormats = []string{rowmark, jsonFormat, legacyJSONFormat, lineDiff, wordDiff, colorWords}
+var allFormats = []string{rowmark, jsonFormat, legacyJSONFormat, lineDiff, wordDiff, colorWords, onlyAdded}
 
 // Formatter can print the differences to stdout
 // and accompanying metadata to stderr
@@ -51,6 +53,8 @@ func (f *Formatter) Format(diff digest.Differences) error {
 		return f.wordDiff(diff)
 	case colorWords:
 		return f.colorWords(diff)
+	case onlyAdded:
+		return f.lineOnlyAdded(diff)
 	default:
 		return fmt.Errorf("formatter not found")
 	}
@@ -257,4 +261,23 @@ func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, addi
 
 	return nil
 
+}
+
+// print only added row
+func (f *Formatter) lineOnlyAdded(diff digest.Differences) error {
+	includes := f.ctx.GetIncludeColumnPositions()
+
+	blue := color.New(color.FgBlue).FprintfFunc()
+	green := color.New(color.FgGreen).FprintfFunc()
+
+	blue(f.stderr, "# Additions (%d)\n", len(diff.Additions))
+	for _, addition := range diff.Additions {
+		green(f.stdout, "%s\n", includes.String(addition, f.ctx.separator))
+	}
+	blue(f.stderr, "# Modifications (%d)\n", len(diff.Modifications))
+	for _, modification := range diff.Modifications {
+		green(f.stdout, "%s\n", includes.String(modification.Current, f.ctx.separator))
+	}
+
+	return nil
 }
