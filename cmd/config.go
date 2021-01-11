@@ -53,7 +53,22 @@ func NewContext(
 	}
 
 	if baseRecordCount != deltaRecordCount {
-		return nil, fmt.Errorf("base-file and delta-file columns count do not match")
+		if len(valueColumnPositions) > 0 {
+			var maxColumnPositions int = 0
+			for _, value := range valueColumnPositions {
+				if maxColumnPositions < value {
+					maxColumnPositions = value
+				}
+			}
+			if baseRecordCount <= maxColumnPositions {
+				return nil, fmt.Errorf("base-file does not have column %v", maxColumnPositions)
+			}
+			if deltaRecordCount <= maxColumnPositions {
+				return nil, fmt.Errorf("delta-file does not have column %v", maxColumnPositions)
+			}
+		} else {
+			return nil, fmt.Errorf("base-file and delta-file columns count do not match and columns to selective compare not specified")
+		}
 	}
 
 	if len(ignoreValueColumnPositions) > 0 && len(valueColumnPositions) > 0 {
