@@ -30,13 +30,13 @@ const bufferSize = 512
 // Create can create a Digest using the Configurations passed.
 // It returns the digest as a map[uint64]uint64.
 // It can also keep track of the Source line.
-func Create(config *Config) (map[uint64]uint64, map[uint64][]string, error) {
+func Create(config *Config) (map[uint64]uint64, map[uint64][][]string, error) {
 	maxProcs := runtime.NumCPU()
 	reader := csv.NewReader(config.Reader)
 	reader.Comma = config.Separator
 	reader.LazyQuotes = config.LazyQuotes
 	output := make(map[uint64]uint64)
-	sourceMap := make(map[uint64][]string)
+	sourceMap := make(map[uint64][][]string)
 
 	digestChannel := make(chan []Digest, bufferSize*maxProcs)
 	errorChannel := make(chan error)
@@ -47,7 +47,9 @@ func Create(config *Config) (map[uint64]uint64, map[uint64][]string, error) {
 	for digests := range digestChannel {
 		for _, digest := range digests {
 			output[digest.Key] = digest.Value
-			sourceMap[digest.Key] = digest.Source
+			sources :=sourceMap[digest.Key]
+			sources = append(sources, digest.Source)
+			sourceMap[digest.Key] = sources
 		}
 	}
 
