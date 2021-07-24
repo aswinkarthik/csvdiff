@@ -24,9 +24,7 @@ func NewFileDigest() *FileDigest {
 // This operation is not thread safe
 func (f *FileDigest) Append(d Digest) {
 	f.Digests[d.Key] = d.Value
-	sources :=f.SourceMap[d.Key]
-	sources = append(sources, d.Source)
-	f.SourceMap[d.Key] = sources
+	f.SourceMap[d.Key] = append(f.SourceMap[d.Key], d.Source)
 }
 
 // SafeAppend a Digest to a FileDigest
@@ -36,7 +34,5 @@ func (f *FileDigest) SafeAppend(d Digest) {
 	defer f.lock.Unlock()
 
 	f.Digests[d.Key] = d.Value
-	sources :=f.SourceMap[d.Key]
-	sources = append(sources, d.Source)
-	f.SourceMap[d.Key] = sources
+	f.SourceMap[d.Key] = append(f.SourceMap[d.Key], d.Source)
 }
