@@ -96,19 +96,24 @@ func streamDifferences(baseFileDigest *FileDigest, digestChannel chan []Digest) 
 				if baseValue, present := base.Digests[d.Key]; present {
 					if baseValue != d.Value {
 						// Modification
-						msgChannel <- message{_type: modification, current: d.Source, original: base.SourceMap[d.Key]}
+						msgChannel <- message{_type: modification, current: d.Source, original: base.SourceMap[d.Key][0]}
 					}
 					// delete from sourceMap so that at the end only deletions are left in base
-					delete(base.SourceMap, d.Key)
+					sources := base.SourceMap[d.Key]
+					if len(sources) == 1 {
+						delete(base.SourceMap, d.Key)
+						continue
+					}
+					sources = sources[:len(sources)-1]
+					base.SourceMap[d.Key] = sources
 				} else {
 					// Addition
 					msgChannel <- message{_type: addition, current: d.Source}
 				}
 			}
 		}
-
 		for _, value := range base.SourceMap {
-			msgChannel <- message{_type: deletion, current: value}
+			msgChannel <- message{_type: deletion, current: value[0]}
 		}
 
 	}(baseFileDigest, digestChannel, msgChannel)
