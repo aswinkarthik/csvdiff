@@ -7,7 +7,7 @@ import (
 // FileDigest represents the digests created from one file
 type FileDigest struct {
 	Digests   map[uint64]uint64
-	SourceMap map[uint64][]string
+	SourceMap map[uint64][][]string
 	lock      *sync.Mutex
 }
 
@@ -15,7 +15,7 @@ type FileDigest struct {
 func NewFileDigest() *FileDigest {
 	return &FileDigest{
 		Digests:   make(map[uint64]uint64),
-		SourceMap: make(map[uint64][]string),
+		SourceMap: make(map[uint64][][]string),
 		lock:      &sync.Mutex{},
 	}
 }
@@ -24,7 +24,9 @@ func NewFileDigest() *FileDigest {
 // This operation is not thread safe
 func (f *FileDigest) Append(d Digest) {
 	f.Digests[d.Key] = d.Value
-	f.SourceMap[d.Key] = d.Source
+	sources :=f.SourceMap[d.Key]
+	sources = append(sources, d.Source)
+	f.SourceMap[d.Key] = sources
 }
 
 // SafeAppend a Digest to a FileDigest
@@ -34,5 +36,7 @@ func (f *FileDigest) SafeAppend(d Digest) {
 	defer f.lock.Unlock()
 
 	f.Digests[d.Key] = d.Value
-	f.SourceMap[d.Key] = d.Source
+	sources :=f.SourceMap[d.Key]
+	sources = append(sources, d.Source)
+	f.SourceMap[d.Key] = sources
 }
