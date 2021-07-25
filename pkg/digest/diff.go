@@ -48,7 +48,7 @@ func Diff(baseConfig, deltaConfig Config) (Differences, error) {
 	baseFileDigest := NewFileDigest()
 	for digests := range baseDigestChannel {
 		for _, d := range digests {
-			baseFileDigest.Append(d)
+			baseFileDigest.SafeAppend(d)
 		}
 	}
 
@@ -94,18 +94,37 @@ func streamDifferences(baseFileDigest *FileDigest, digestChannel chan []Digest) 
 		for digests := range digestChannel {
 			for _, d := range digests {
 				if baseValue, present := base.Digests[d.Key]; present {
-					if baseValue != d.Value {
-						// Modification
-						msgChannel <- message{_type: modification, current: d.Source, original: base.SourceMap[d.Key][0]}
+					last := len(baseValue) - 1
+					for i, v := range baseValue {
+						if v != d.Value && i == last {
+
+							// Modification
+							msgChannel <- message{_type: modification, current: d.Source, original: base.SourceMap[d.Key][i]}
+
+							sources := base.SourceMap[d.Key]
+							if len(sources) == 1 {
+								delete(base.SourceMap, d.Key)
+								break
+							}
+							sources = append(sources[:i], sources[i+1:]...)
+							baseValue = RemoveIndex(baseValue, i)
+							base.SourceMap[d.Key] = sources
+							base.Digests[d.Key] = baseValue
+							break
+						} else if v == d.Value {
+							// delete from sourceMap so that at the end only deletions are left in base
+							sources := base.SourceMap[d.Key]
+							if len(sources) == 1 {
+								delete(base.SourceMap, d.Key)
+								break
+							}
+							sources = append(sources[:i], sources[i+1:]...)
+							baseValue = RemoveIndex(baseValue, i)
+							base.SourceMap[d.Key] = sources
+							base.Digests[d.Key] = baseValue
+							break
+						}
 					}
-					// delete from sourceMap so that at the end only deletions are left in base
-					sources := base.SourceMap[d.Key]
-					if len(sources) == 1 {
-						delete(base.SourceMap, d.Key)
-						continue
-					}
-					sources = sources[:len(sources)-1]
-					base.SourceMap[d.Key] = sources
 				} else {
 					// Addition
 					msgChannel <- message{_type: addition, current: d.Source}
@@ -119,4 +138,8 @@ func streamDifferences(baseFileDigest *FileDigest, digestChannel chan []Digest) 
 	}(baseFileDigest, digestChannel, msgChannel)
 
 	return msgChannel
+}
+
+func RemoveIndex(s []uint64, index int) []uint64 {
+	return append(s[:index], s[index+1:]...)
 }

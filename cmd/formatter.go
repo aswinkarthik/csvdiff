@@ -227,7 +227,6 @@ func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, addi
 		includes = f.ctx.GetValueColumns()
 	}
 	blue := color.New(color.FgBlue).SprintfFunc()
-	cyan := color.New(color.FgHiCyan).SprintfFunc()
 	red := color.New(color.FgRed).SprintfFunc()
 	green := color.New(color.FgGreen).SprintfFunc()
 
@@ -237,12 +236,10 @@ func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, addi
 	}
 
 	_, _ = fmt.Fprintln(f.stderr, blue("# Modifications (%d)", len(diff.Modifications)))
-	for index, modification := range diff.Modifications {
+	for _, modification := range diff.Modifications {
 		result := make([]string, 0, len(modification.Current))
-		found := false
 		for i := 0; i < len(includes) || i < len(modification.Current); i++ {
 			if modification.Original[i] != modification.Current[i] {
-				found = true
 				removed := red(deletionFormat, modification.Original[i])
 				added := green(additionFormat, modification.Current[i])
 				result = append(result, fmt.Sprintf("%s%s", removed, added))
@@ -250,11 +247,7 @@ func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, addi
 				result = append(result, modification.Current[i])
 			}
 		}
-		if found {
-			_, _ = fmt.Fprintln(f.stdout, includes.String(result, f.ctx.separator))
-		} else {
-			_, _ = fmt.Fprintln(f.stdout, cyan("Modification # %d is not in content, skipped", index))
-		}
+		_, _ = fmt.Fprintln(f.stdout, includes.String(result, f.ctx.separator))
 	}
 
 	_, _ = fmt.Fprintln(f.stderr, blue("# Deletions (%d)", len(diff.Deletions)))
