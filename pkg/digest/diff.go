@@ -129,7 +129,9 @@ func streamDifferences(baseFileDigest *FileDigest, digestChannel chan []Digest) 
 			}
 		}
 		for _, value := range base.SourceMap {
-			msgChannel <- message{_type: deletion, current: value[0]}
+			for _, v := range value {
+				msgChannel <- message{_type: deletion, current: v}
+			}
 		}
 
 	}(baseFileDigest, digestChannel, msgChannel)
