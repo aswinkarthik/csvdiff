@@ -115,6 +115,10 @@ func streamDifferences(baseFileDigest *FileDigest, digestChannel chan []Digest) 
 								delete(base.SourceMap, d.Key)
 								break
 							}
+							if sources == nil {
+								msgChannel <- message{_type: addition, current: d.Source}
+								break
+							}
 							sources = append(sources[:i], sources[i+1:]...)
 							baseValue = append(baseValue[:i], baseValue[i+1:]...)
 							base.SourceMap[d.Key] = sources
