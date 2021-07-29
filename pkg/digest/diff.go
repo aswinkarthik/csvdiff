@@ -48,7 +48,7 @@ func Diff(baseConfig, deltaConfig Config) (Differences, error) {
 	baseFileDigest := NewFileDigest()
 	for digests := range baseDigestChannel {
 		for _, d := range digests {
-			baseFileDigest.Append(d)
+			baseFileDigest.SafeAppend(d)
 		}
 	}
 
@@ -94,21 +94,48 @@ func streamDifferences(baseFileDigest *FileDigest, digestChannel chan []Digest) 
 		for digests := range digestChannel {
 			for _, d := range digests {
 				if baseValue, present := base.Digests[d.Key]; present {
-					if baseValue != d.Value {
-						// Modification
-						msgChannel <- message{_type: modification, current: d.Source, original: base.SourceMap[d.Key]}
+					last := len(baseValue) - 1
+					stopSearch := false
+					for i, v := range baseValue {
+						if v != d.Value && i == last {
+
+							// Modification
+							msgChannel <- message{_type: modification, current: d.Source, original: base.SourceMap[d.Key][i]}
+							stopSearch = true
+						} else if v == d.Value {
+							stopSearch = true
+						} else {
+							stopSearch = false
+						}
+						if stopSearch {
+
+							// delete from sourceMap so that at the end only deletions are left in base
+							sources := base.SourceMap[d.Key]
+							if len(sources) == 1 {
+								delete(base.SourceMap, d.Key)
+								break
+							}
+							if sources == nil {
+								msgChannel <- message{_type: addition, current: d.Source}
+								break
+							}
+							sources = append(sources[:i], sources[i+1:]...)
+							baseValue = append(baseValue[:i], baseValue[i+1:]...)
+							base.SourceMap[d.Key] = sources
+							base.Digests[d.Key] = baseValue
+							break
+						}
 					}
-					// delete from sourceMap so that at the end only deletions are left in base
-					delete(base.SourceMap, d.Key)
 				} else {
 					// Addition
 					msgChannel <- message{_type: addition, current: d.Source}
 				}
 			}
 		}
-
 		for _, value := range base.SourceMap {
-			msgChannel <- message{_type: deletion, current: value}
+			for _, v := range value {
+				msgChannel <- message{_type: deletion, current: v}
+			}
 		}
 
 	}(baseFileDigest, digestChannel, msgChannel)

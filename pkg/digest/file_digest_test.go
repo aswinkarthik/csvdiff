@@ -25,7 +25,8 @@ func TestFileDigest_Append(t *testing.T) {
 	assert.NotNil(t, fd)
 	assert.Len(t, fd.Digests, 1)
 	assert.Len(t, fd.SourceMap, 1)
-	assert.Len(t, fd.SourceMap[uint64(1)], 0)
+	assert.Len(t, fd.SourceMap[uint64(1)], 1)
+	assert.Len(t, fd.SourceMap[uint64(1)][0], 0)
 }
 
 func TestFileDigest_SafeAppend(t *testing.T) {
