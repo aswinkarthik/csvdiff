@@ -1,11 +1,17 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/fatih/color"
-	"io"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -15,9 +21,18 @@ const (
 	lineDiff         = "diff"
 	wordDiff         = "word-diff"
 	colorWords       = "color-words"
+	deltaFile        = "delta-file"
 )
 
-var allFormats = []string{rowmark, jsonFormat, legacyJSONFormat, lineDiff, wordDiff, colorWords}
+var allFormats = []string{
+	rowmark,
+	jsonFormat,
+	legacyJSONFormat,
+	lineDiff,
+	wordDiff,
+	colorWords,
+	deltaFile,
+}
 
 // Formatter can print the differences to stdout
 // and accompanying metadata to stderr
@@ -51,6 +66,8 @@ func (f *Formatter) Format(diff digest.Differences) error {
 		return f.wordDiff(diff)
 	case colorWords:
 		return f.colorWords(diff)
+	case deltaFile:
+		return f.deltaFile(diff)
 	default:
 		return fmt.Errorf("formatter not found")
 	}
@@ -219,6 +236,48 @@ func (f *Formatter) wordDiff(diff digest.Differences) error {
 // colorWords is git-style --color-words
 func (f *Formatter) colorWords(diff digest.Differences) error {
 	return f.wordLevelDiffs(diff, "%s", "%s")
+}
+
+func (f *Formatter) deltaFile(diff digest.Differences) error {
+	diff.Deletions = nil
+
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "csvdiff-")
+	if err != nil {
+		return errors.Wrap(err, "Cannot create temporary file")
+	}
+
+	_, _ = fmt.Fprintf(f.stdout, "created delta file: %s\n", tmpFile.Name())
+	w := csv.NewWriter(tmpFile)
+	w.Comma = ';'
+
+	for _, addition := range diff.Additions {
+		writeToFile(w, addition)
+	}
+
+	diff.Additions = nil
+
+	for _, modification := range diff.Modifications {
+		writeToFile(w, modification.Current)
+	}
+
+	diff.Modifications = nil
+
+	w.Flush()
+
+	// Close the file
+	if err := tmpFile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	return nil
+}
+
+func writeToFile(w *csv.Writer, fields []string) error {
+	if err := w.Write(fields); err != nil {
+		return errors.Wrap(err, "Failed to write csv row to temporary file")
+	}
+
+	return nil
 }
 
 func (f *Formatter) wordLevelDiffs(diff digest.Differences, deletionFormat, additionFormat string) error {
