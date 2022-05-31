@@ -301,11 +301,6 @@ func (f *Formatter) deltaFile(diff digest.Differences) (err error) {
 
 	w.Flush()
 
-	// Close the file
-	if err := tmpFile.Close(); err != nil {
-		log.Fatal(err)
-	}
-
 	return nil
 }
 
