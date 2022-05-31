@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
+	"github.com/spf13/afero"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -251,6 +253,47 @@ deletions
 	assert.NoError(t, err)
 	assert.Equal(t, expectedStdout, stdout.String())
 	assert.Equal(t, expectedStderr, stderr.String())
+}
+
+func TestDiffFile(t *testing.T) {
+	diff := digest.Differences{
+		Additions:     []digest.Addition{[]string{"addition"}},
+		Modifications: []digest.Modification{{Original: []string{"original"}, Current: []string{"modification"}}},
+		Deletions:     []digest.Deletion{{"deletions"}},
+	}
+
+	expectedDiff := []byte("col\naddition\nmodification\n")
+	expectedStdout := "created delta file: /tmp/csvdiff-tmp\n"
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	fs := afero.NewMemMapFs()
+
+	if err := afero.WriteFile(fs, "/delta.csv", []byte("col"), os.ModePerm); err != nil {
+		t.Fatal("error while preparing delta file within in-memory filesystem")
+	}
+
+	tmpFile, err := fs.Create("/tmp/csvdiff-tmp")
+	if err != nil {
+		t.Fatal("error while creating tmp file")
+	}
+
+	formatter := NewFormatter(&stdout, &stderr, Context{
+		fs:            fs,
+		format:        "diff-file",
+		deltaFilename: "/delta.csv",
+		tmpFile:       tmpFile,
+	})
+
+	err = formatter.Format(diff)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expectedStdout, stdout.String())
+
+	givenDiff, _ := afero.ReadFile(fs, "/tmp/csvdiff-tmp")
+
+	assert.Equal(t, string(expectedDiff), string(givenDiff))
 }
 
 func TestWrongFormatter(t *testing.T) {
