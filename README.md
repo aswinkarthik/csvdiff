@@ -18,7 +18,7 @@ Csvdiff is a difftool to compute changes between two csv files.
 - Supports specifying group of columns as primary-key i.e uniquely identify a row.
 - Support ignoring columns e.g ignore columns like `created_at` timestamps.
 - Compares csvs of million records csv in under 2 seconds.
-- Supports lot of output formats e.g colored git style output or JSON for post-processing.
+- Supports lots of output formats, e.g colored git style output or JSON, as well as a diff csv file for post-processing.
 
 ## Why?
 
@@ -51,7 +51,7 @@ Usage:
 
 Flags:
       --columns ints          Selectively compare positions in CSV Eg: 1,2. Default is entire row
-  -o, --format string         Available (rowmark|json|legacy-json|diff|word-diff|color-words) (default "diff")
+  -o, --format string         Available (rowmark|json|legacy-json|diff|word-diff|color-words|diff-file) (default "diff")
   -h, --help                  help for csvdiff
       --ignore-columns ints   Inverse of --columns flag. This cannot be used if --columns are specified
       --include ints          Include positions in CSV to display Eg: 1,2. Default is entire row
@@ -116,6 +116,7 @@ There are a number of formats supported
 - `json`: JSON serialization of result
 - `legacy-json`: JSON serialization of result in old format
 - `rowmark`: Marks each row with ADDED or MODIFIED status.
+- `diff-file`: Creates a delta/diff CSV file between the base and delta files. The CSV file contains the headers of the delta file, as well as all additions and current modifications.
 
 ## Miscellaneous features
 
