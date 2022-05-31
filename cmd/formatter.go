@@ -5,9 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
-	"os"
 
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/fatih/color"
@@ -21,7 +18,7 @@ const (
 	lineDiff         = "diff"
 	wordDiff         = "word-diff"
 	colorWords       = "color-words"
-	deltaFile        = "delta-file"
+	diffFile         = "diff-file"
 )
 
 var allFormats = []string{
@@ -31,7 +28,7 @@ var allFormats = []string{
 	lineDiff,
 	wordDiff,
 	colorWords,
-	deltaFile,
+	diffFile,
 }
 
 // Formatter can print the differences to stdout
@@ -66,8 +63,8 @@ func (f *Formatter) Format(diff digest.Differences) error {
 		return f.wordDiff(diff)
 	case colorWords:
 		return f.colorWords(diff)
-	case deltaFile:
-		return f.deltaFile(diff)
+	case diffFile:
+		return f.diffFile(diff)
 	default:
 		return fmt.Errorf("formatter not found")
 	}
@@ -238,7 +235,7 @@ func (f *Formatter) colorWords(diff digest.Differences) error {
 	return f.wordLevelDiffs(diff, "%s", "%s")
 }
 
-func (f *Formatter) deltaFile(diff digest.Differences) (err error) {
+func (f *Formatter) diffFile(diff digest.Differences) (err error) {
 	diff.Deletions = nil
 
 	df, err := f.ctx.fs.Open(f.ctx.deltaFilename)
@@ -260,31 +257,17 @@ func (f *Formatter) deltaFile(diff digest.Differences) (err error) {
 
 		return errors.Wrap(err, "unable to process headers from csv file")
 	}
+	_, _ = fmt.Fprintf(f.stdout, "created delta file: %s\n", f.ctx.tmpFile.Name())
 
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "csvdiff-")
-	if err != nil {
-		return errors.Wrap(err, "Cannot create temporary file")
-	}
-
-	defer func() {
-		if err != nil && tmpFile != nil {
-			os.Remove(tmpFile.Name())
-		}
-	}()
-
-	defer tmpFile.Close()
-
-	_, _ = fmt.Fprintf(f.stdout, "created delta file: %s\n", tmpFile.Name())
-
-	w := csv.NewWriter(tmpFile)
+	w := csv.NewWriter(f.ctx.tmpFile)
 	w.Comma = f.ctx.separator
 
-	if err = writeToFile(w, headers); err != nil {
+	if err = writeToCSVFile(w, headers); err != nil {
 		return errors.Wrap(err, "unable to write headers to delta csv file")
 	}
 
 	for _, addition := range diff.Additions {
-		if err = writeToFile(w, addition); err != nil {
+		if err = writeToCSVFile(w, addition); err != nil {
 			return errors.Wrap(err, "unable to write additions to delta csv file")
 		}
 	}
@@ -292,7 +275,7 @@ func (f *Formatter) deltaFile(diff digest.Differences) (err error) {
 	diff.Additions = nil
 
 	for _, modification := range diff.Modifications {
-		if err = writeToFile(w, modification.Current); err != nil {
+		if err = writeToCSVFile(w, modification.Current); err != nil {
 			return errors.Wrap(err, "unable to write current modifications to delta csv file")
 		}
 	}
@@ -304,7 +287,7 @@ func (f *Formatter) deltaFile(diff digest.Differences) (err error) {
 	return nil
 }
 
-func writeToFile(w *csv.Writer, fields []string) error {
+func writeToCSVFile(w *csv.Writer, fields []string) error {
 	if err := w.Write(fields); err != nil {
 		return errors.Wrap(err, "Failed to write csv row to temporary file")
 	}

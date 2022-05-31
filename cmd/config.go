@@ -4,6 +4,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -22,6 +24,7 @@ type Context struct {
 	deltaFilename          string
 	baseFile               afero.File
 	deltaFile              afero.File
+	tmpFile                afero.File
 	recordCount            int
 	separator              rune
 	lazyQuotes             bool
@@ -67,10 +70,20 @@ func NewContext(
 	if err != nil {
 		return nil, err
 	}
+
 	deltaFile, err := fs.Open(deltaFilename)
 	if err != nil {
 		return nil, err
 	}
+
+	var tmpFile *os.File
+
+	if format == diffFile {
+		if tmpFile, err = ioutil.TempFile(os.TempDir(), "csvdiff-"); err != nil {
+			return nil, err
+		}
+	}
+
 	ctx := &Context{
 		fs:                     fs,
 		primaryKeyPositions:    primaryKeyPositions,
@@ -81,6 +94,7 @@ func NewContext(
 		deltaFilename:          deltaFilename,
 		baseFile:               baseFile,
 		deltaFile:              deltaFile,
+		tmpFile:                tmpFile,
 		recordCount:            baseRecordCount,
 		separator:              separator,
 		lazyQuotes:             lazyQuotes,
@@ -232,7 +246,12 @@ func (c *Context) Close() {
 	if c.baseFile != nil {
 		_ = c.baseFile.Close()
 	}
+
 	if c.deltaFile != nil {
 		_ = c.deltaFile.Close()
+	}
+
+	if c.tmpFile != nil {
+		_ = c.tmpFile.Close()
 	}
 }
