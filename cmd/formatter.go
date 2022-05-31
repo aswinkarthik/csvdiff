@@ -238,26 +238,63 @@ func (f *Formatter) colorWords(diff digest.Differences) error {
 	return f.wordLevelDiffs(diff, "%s", "%s")
 }
 
-func (f *Formatter) deltaFile(diff digest.Differences) error {
+func (f *Formatter) deltaFile(diff digest.Differences) (err error) {
 	diff.Deletions = nil
+
+	df, err := f.ctx.fs.Open(f.ctx.deltaFilename)
+	if err != nil {
+		return errors.Wrapf(err, "unable to open delta file %s", f.ctx.deltaFilename)
+	}
+
+	defer df.Close()
+
+	r := csv.NewReader(df)
+	r.Comma = f.ctx.separator
+	r.LazyQuotes = f.ctx.lazyQuotes
+
+	headers, err := r.Read()
+	if err != nil {
+		if err == io.EOF {
+			return errors.Wrap(err, "unable to process headers from csv file for delta file. EOF reached. invalid CSV file")
+		}
+
+		return errors.Wrap(err, "unable to process headers from csv file")
+	}
 
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "csvdiff-")
 	if err != nil {
 		return errors.Wrap(err, "Cannot create temporary file")
 	}
 
+	defer func() {
+		if err != nil && tmpFile != nil {
+			os.Remove(tmpFile.Name())
+		}
+	}()
+
+	defer tmpFile.Close()
+
 	_, _ = fmt.Fprintf(f.stdout, "created delta file: %s\n", tmpFile.Name())
+
 	w := csv.NewWriter(tmpFile)
-	w.Comma = ';'
+	w.Comma = f.ctx.separator
+
+	if err = writeToFile(w, headers); err != nil {
+		return errors.Wrap(err, "unable to write headers to delta csv file")
+	}
 
 	for _, addition := range diff.Additions {
-		writeToFile(w, addition)
+		if err = writeToFile(w, addition); err != nil {
+			return errors.Wrap(err, "unable to write additions to delta csv file")
+		}
 	}
 
 	diff.Additions = nil
 
 	for _, modification := range diff.Modifications {
-		writeToFile(w, modification.Current)
+		if err = writeToFile(w, modification.Current); err != nil {
+			return errors.Wrap(err, "unable to write current modifications to delta csv file")
+		}
 	}
 
 	diff.Modifications = nil
