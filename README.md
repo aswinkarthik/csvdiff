@@ -51,7 +51,7 @@ Usage:
 
 Flags:
       --columns ints          Selectively compare positions in CSV Eg: 1,2. Default is entire row
-  -o, --format string         Available (rowmark|json|legacy-json|diff|word-diff|color-words) (default "diff")
+  -o, --format string         Available (rowmark|rowmark-with-header|json|legacy-json|diff|word-diff|color-words) (default "diff")
   -h, --help                  help for csvdiff
       --ignore-columns ints   Inverse of --columns flag. This cannot be used if --columns are specified
       --include ints          Include positions in CSV to display Eg: 1,2. Default is entire row
@@ -116,6 +116,7 @@ There are a number of formats supported
 - `json`: JSON serialization of result
 - `legacy-json`: JSON serialization of result in old format
 - `rowmark`: Marks each row with ADDED or MODIFIED status.
+- `rowmark-with-header`: Marks each row with ADDED or MODIFIED status. Always print the first line(csv header).
 
 ## Miscellaneous features
 
