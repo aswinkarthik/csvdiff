@@ -95,6 +95,34 @@ Rows:
 	assert.Equal(t, expectedStderr, stderr.String())
 }
 
+func TestRowMarkFormatterForTabSeparator(t *testing.T) {
+	diff := digest.Differences{
+		Additions:     []digest.Addition{[]string{"additions"}},
+		Modifications: []digest.Modification{{Current: []string{"modification"}}},
+		Deletions:     []digest.Deletion{[]string{"deletions"}},
+	}
+	expectedStdout := `additions	ADDED
+modification	MODIFIED
+deletions	DELETED
+`
+	expectedStderr := `Additions 1
+Modifications 1
+Deletions 1
+Rows:
+`
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	formatter := NewFormatter(&stdout, &stderr, Context{format: "rowmark", separator: '\t'})
+
+	err := formatter.Format(diff)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expectedStdout, stdout.String())
+	assert.Equal(t, expectedStderr, stderr.String())
+}
+
 func TestLineDiff(t *testing.T) {
 	t.Run("should show line diff with comma by default", func(t *testing.T) {
 		diff := digest.Differences{
