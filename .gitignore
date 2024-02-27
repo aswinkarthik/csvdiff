@@ -16,6 +16,7 @@
 *.out
 
 .idea/*
+.vscode/*
 
 out/
 
@@ -28,3 +29,4 @@ majestic_million*.csv
 
 # Output binary
 csvdiff
+dist/
