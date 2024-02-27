@@ -1,23 +1,27 @@
 package cmd
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/aswinkarthik/csvdiff/pkg/digest"
 	"github.com/fatih/color"
-	"io"
 )
 
 const (
-	rowmark          = "rowmark"
-	jsonFormat       = "json"
-	legacyJSONFormat = "legacy-json"
-	lineDiff         = "diff"
-	wordDiff         = "word-diff"
-	colorWords       = "color-words"
+	rowmark           = "rowmark"
+	rowmarkWithHeader = "rowmark-with-header"
+	jsonFormat        = "json"
+	legacyJSONFormat  = "legacy-json"
+	lineDiff          = "diff"
+	wordDiff          = "word-diff"
+	colorWords        = "color-words"
 )
 
-var allFormats = []string{rowmark, jsonFormat, legacyJSONFormat, lineDiff, wordDiff, colorWords}
+var allFormats = []string{rowmark, rowmarkWithHeader, jsonFormat, legacyJSONFormat, lineDiff, wordDiff, colorWords}
 
 // Formatter can print the differences to stdout
 // and accompanying metadata to stderr
@@ -45,6 +49,8 @@ func (f *Formatter) Format(diff digest.Differences) error {
 		return f.json(diff)
 	case rowmark:
 		return f.rowMark(diff)
+	case rowmarkWithHeader:
+		return f.rowmarkWithHeader(diff)
 	case lineDiff:
 		return f.lineDiff(diff)
 	case wordDiff:
@@ -155,6 +161,7 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 	_, _ = fmt.Fprintf(f.stderr, "Rows:\n")
 
 	includes := f.ctx.GetIncludeColumnPositions()
+	separator := f.ctx.separator
 
 	additions := make([]string, 0, len(diff.Additions))
 	for _, addition := range diff.Additions {
@@ -172,15 +179,74 @@ func (f *Formatter) rowMark(diff digest.Differences) error {
 	}
 
 	for _, added := range additions {
-		_, _ = fmt.Fprintf(f.stdout, "%s,%s\n", added, "ADDED")
+		_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", added, string(separator), "ADDED")
 	}
 
 	for _, modified := range modifications {
-		_, _ = fmt.Fprintf(f.stdout, "%s,%s\n", modified, "MODIFIED")
+		_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", modified, string(separator), "MODIFIED")
 	}
 
 	for _, deleted := range deletions {
-		_, _ = fmt.Fprintf(f.stdout, "%s,%s\n", deleted, "DELETED")
+		_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", deleted, string(separator), "DELETED")
+	}
+
+	return nil
+}
+
+// RowMarkFormatter formats diff by marking each row as
+// ADDED/MODIFIED. It mutates the row and adds as a new column.
+func (f *Formatter) rowmarkWithHeader(diff digest.Differences) error {
+	_, _ = fmt.Fprintf(f.stderr, "Additions %d\n", len(diff.Additions))
+	_, _ = fmt.Fprintf(f.stderr, "Modifications %d\n", len(diff.Modifications))
+	_, _ = fmt.Fprintf(f.stderr, "Deletions %d\n", len(diff.Deletions))
+	_, _ = fmt.Fprintf(f.stderr, "\n")
+
+	includes := f.ctx.GetIncludeColumnPositions()
+	separator := f.ctx.separator
+
+	additions := make([]string, 0, len(diff.Additions))
+	for _, addition := range diff.Additions {
+		additions = append(additions, includes.String(addition, f.ctx.separator))
+	}
+
+	modifications := make([]string, 0, len(diff.Modifications))
+	for _, modification := range diff.Modifications {
+		modifications = append(modifications, includes.String(modification.Current, f.ctx.separator))
+	}
+
+	deletions := make([]string, 0, len(diff.Deletions))
+	for _, deletion := range diff.Deletions {
+		deletions = append(deletions, includes.String(deletion, f.ctx.separator))
+	}
+
+	fs, err := f.ctx.fs.Open(f.ctx.baseFilename)
+	if err != nil {
+		return fmt.Errorf("unable to open file %s, %v", f.ctx.baseFilename, err)
+	}
+
+	defer fs.Close()
+	r := csv.NewReader(fs)
+	headers, err := r.Read()
+	if err != nil {
+		if err == io.EOF {
+			return fmt.Errorf("unable to process headers from csv file for delta file. EOF reached. invalid CSV file, %v", err)
+		}
+
+		return fmt.Errorf("unable to process headers from csv file, %v", err)
+	}
+
+	_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", strings.Join(headers, string(separator)), string(separator), "CSVDIFF")
+
+	for _, added := range additions {
+		_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", added, string(separator), "ADDED")
+	}
+
+	for _, modified := range modifications {
+		_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", modified, string(separator), "MODIFIED")
+	}
+
+	for _, deleted := range deletions {
+		_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", deleted, string(separator), "DELETED")
 	}
 
 	return nil
