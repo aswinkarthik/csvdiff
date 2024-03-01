@@ -235,7 +235,9 @@ func (f *Formatter) rowmarkWithHeader(diff digest.Differences) error {
 		return fmt.Errorf("unable to process headers from csv file, %v", err)
 	}
 
-	_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", strings.Join(headers, string(separator)), string(separator), "CSVDIFF")
+	if len(additions)+len(modifications)+len(deletions) > 0 {
+		_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", strings.Join(headers, string(separator)), string(separator), "CSVDIFF")
+	}
 
 	for _, added := range additions {
 		_, _ = fmt.Fprintf(f.stdout, "%s%s%s\n", added, string(separator), "ADDED")
